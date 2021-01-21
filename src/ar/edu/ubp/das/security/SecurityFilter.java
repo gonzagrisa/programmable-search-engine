@@ -30,12 +30,11 @@ public class SecurityFilter implements ContainerRequestFilter{
 		String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 		if (!isHeaderValid(authHeader)) {
 			abortWithUnauthorized(requestContext);
-			return;
 		}
-		String token = authHeader.substring(AUTHORIZATION_PREFIX.length()).trim();
 		try {
-			UserBean user = validateToken(token);
-            AppSecurityContext secContext = new AppSecurityContext(user, requestContext.getSecurityContext().isSecure());
+			String token = authHeader.substring(AUTHORIZATION_PREFIX.length()).trim();
+            AppSecurityContext secContext = 
+            		new AppSecurityContext(validateToken(token), requestContext.getSecurityContext().isSecure());
 			requestContext.setSecurityContext(secContext);
 			requestContext.setProperty("id", 1);
 		} catch (Exception e) {
@@ -50,7 +49,9 @@ public class SecurityFilter implements ContainerRequestFilter{
 	
 	private void abortWithUnauthorized(ContainerRequestContext requestContext) {
 		requestContext
-				.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("El usuario no puede acceder al recurso").build());
+				.abortWith(Response.status(Response.Status.UNAUTHORIZED)
+				.entity("El usuario no puede acceder al recurso")
+				.build());
 	}
 	
 	private UserBean validateToken(String token) throws Exception {
