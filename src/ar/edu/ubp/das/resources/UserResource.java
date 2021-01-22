@@ -42,6 +42,7 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response login(UserBean user) {
 		try {
+			System.out.println(user);
 			String token = issueToken(authenticate(user));
 			return Response.ok(token).build();
 		} catch (Exception e) {
@@ -55,7 +56,8 @@ public class UserResource {
 	public Response signup(UserBean user) {
 		try {
 			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
-			return Response.ok().entity(dao.insert(user)).build();
+			dao.insert(user);
+			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
@@ -91,7 +93,7 @@ public class UserResource {
 	
 	private UserBean authenticate(UserBean user) throws Exception {
 		Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
-		UserBean userFound = dao.select(user).get(0);
+		UserBean userFound = dao.find(user);
 		if (userFound != null)
 			return userFound;
 		else {
