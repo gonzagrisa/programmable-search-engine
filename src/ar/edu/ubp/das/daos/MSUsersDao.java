@@ -10,13 +10,7 @@ import ar.edu.ubp.das.db.Dao;
 public class MSUsersDao extends Dao<UserBean, UserBean> {
 
 	@Override
-	public UserBean delete(UserBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public UserBean insert(UserBean user) throws SQLException {
+	public void insert(UserBean user) throws SQLException {
 		try {
 			this.connect();
 			this.setProcedure("dbo.new_user(?,?,?,?)");
@@ -25,7 +19,6 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(3, user.getUsername());
 			this.setParameter(4, user.getPassword());
 			this.execute();
-			return null;
 		} finally {
 			this.close();
 		}
@@ -41,12 +34,9 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	}
 
 	@Override
-	public List<UserBean> select(UserBean user) throws SQLException {
+	public List<UserBean> select() throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.validate_user(?,?)");
-			this.setParameter(1, user.getUsername());
-			this.setParameter(2, user.getPassword());
 			return this.executeQuery();
 		} finally {
 			this.close();
@@ -54,7 +44,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	}
 
 	@Override
-	public UserBean update(UserBean user) throws SQLException {
+	public void update(UserBean user) throws SQLException {
 		try {
 			this.connect();
 			this.setProcedure("dbo.update_user(?,?,?,?,?)");
@@ -64,15 +54,67 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(4, user.getUsername());
 			this.setParameter(5, user.getPassword());
 			this.executeUpdate();
-			return null;
 		} finally {
 			this.close();
 		}
 	}
 
 	@Override
-	public boolean valid(UserBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean valid(UserBean user) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.validate_user(?,?)");
+			this.setParameter(1, user.getUsername());
+			this.setParameter(2, user.getPassword());
+			if (this.executeQuery().get(0) == null)
+				return false;
+			return true;
+		} finally {
+			this.close();
+		}
 	}
+	
+	@Override
+	public UserBean find(UserBean user) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.validate_user(?,?)");
+			this.setParameter(1, user.getUsername());
+			this.setParameter(2, user.getPassword());
+			return this.executeQuery().get(0);
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
+	public UserBean find(Integer id) throws SQLException {
+		System.out.println("ID: " + id);
+		return null;
+	}
+	
+	@Override
+	public void delete(Integer arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<UserBean> select(Integer arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void delete(UserBean arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<UserBean> select(UserBean arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
