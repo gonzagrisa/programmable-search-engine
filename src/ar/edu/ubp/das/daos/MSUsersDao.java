@@ -18,7 +18,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(2, user.getLastName());
 			this.setParameter(3, user.getUsername());
 			this.setParameter(4, user.getPassword());
-			this.execute();
+			this.executeUpdate();
 		} finally {
 			this.close();
 		}
@@ -115,6 +115,24 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	public List<UserBean> select(UserBean arg0) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void delete(UserBean arg0, Integer arg1) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void insert(UserBean arg0, Integer arg1) throws SQLException {
+		System.out.println("INTEGER: "+ arg1);
+		
+	}
+
+	@Override
+	public void update(UserBean arg0, Integer arg1) throws SQLException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

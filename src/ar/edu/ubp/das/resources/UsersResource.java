@@ -21,8 +21,8 @@ import ar.edu.ubp.das.security.Secured;
 import ar.edu.ubp.das.security.SecurityFilter;
 import io.jsonwebtoken.Jwts;
 
-@Path("/")
-public class UserResource {
+@Path("users")
+public class UsersResource {
 	@Context
 	SecurityContext securityContext;
 
@@ -30,9 +30,7 @@ public class UserResource {
 	ContainerRequestContext request;
 
 	@GET
-	@Secured
 	@Path("ping")
-	@RolesAllowed("ADMIN")
 	public Response ping() {
 		return Response.status(Status.OK).entity("pong").build();
 	}
@@ -42,7 +40,6 @@ public class UserResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response login(UserBean user) {
 		try {
-			System.out.println(user);
 			String token = issueToken(authenticate(user));
 			return Response.ok(token).build();
 		} catch (Exception e) {
