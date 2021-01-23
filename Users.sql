@@ -1,9 +1,11 @@
+use users
+
 drop table dbo.users
 drop table dbo.websites
 drop table dbo.services
 drop table dbo.preferences
 
--------------------------- TABLA USUARIOS --------------------------
+-- ################## TABLA USUARIOS ##################
 CREATE TABLE dbo.users (
 	user_id		INT IDENTITY(1,1)	NOT NULL,
 	username	VARCHAR(50)			NOT NULL,
@@ -18,6 +20,20 @@ CREATE TABLE dbo.users (
 );
 go
 
+-- ################## TABLA PREFERENCIAS ##################
+CREATE TABLE dbo.preferences
+(
+	user_id			INT				NOT NULL,
+	color			VARCHAR(50)		NOT NULL,
+	icon_url		VARCHAR(500)	NOT NULL,
+	border_radius	INT				NOT NULL,
+	font_size		TINYINT			NOT NULL,
+	constraint PK__preferences__END primary key (user_id),
+	constraint FK__preferences__users__END foreign key (user_id) references dbo.users on delete cascade
+);
+go
+
+-- ################## TABLA SERVICIOS ##################
 CREATE TABLE dbo.services
 (
     user_id			INT				NOT NULL,
@@ -29,38 +45,12 @@ CREATE TABLE dbo.services
 );
 go
 
-CREATE TABLE dbo.preferences
-(
-	user_id		INT				NOT NULL,
-	color		VARCHAR(50)		NOT NULL,
-	icon_url	VARCHAR(500)	NOT NULL,
-	border_radius DECIMAL(4,2)	NOT NULL,
-	font_size	TINYINT			NOT NULL,
-	constraint PK__preferences__END primary key (user_id),
-	constraint FK__preferences__users__END foreign key (user_id) references dbo.users on delete cascade
-);
-go
 
-CREATE TABLE dbo.websites
-(
-    user_id	INT				NOT NULL,
-    url		VARCHAR(500)	NOT NULL,
-	reindex	TINYINT			NOT NULL,
-	constraint PK__websites__END primary key (user_id, url),
-	constraint FK__websites__users__END foreign key (user_id) references dbo.users on delete cascade
-);
-go
-
-CREATE TABLE dbo.crawling_stats
-(
-	crawl_id		INT IDENTITY(1,1)	NOT NULL,
-	user_id			INT					NOT NULL,
-	url_visitadas	INT					NOT NULL,
-	url_skipped		INT					NOT NULL,
-
-	parsing_fail	INT					NOT NULL,
-);
-go
+/*
+* *****************************************
+*	PROCEDIMIENTOS ALMACENADOS
+* *****************************************
+*/
 
 -------------------------- PROCEDIMIENTO ALMACENADO VALIDAR USUARIO --------------------------
 create or alter procedure dbo.validate_user
@@ -98,7 +88,7 @@ begin
 end
 go
 
--------------------------- TRIGGER PARA SETTEAR LAS OPCIONES POR DEFECTO AL NUEVO USUARIO --------------------------
+-------------------------- TRIGGER PARA INSERTAR LAS OPCIONES POR DEFECTO AL NUEVO USUARIO CREADO --------------------------
 create trigger ti_users
 on dbo.users
 for insert
@@ -111,9 +101,8 @@ begin
 end
 go
 
-
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR INFORMACION USUARIO --------------------------
-CREATE PROCEDURE dbo.update_user 
+CREATE or ALTER PROCEDURE dbo.update_user
     @id			INT,
 	@name		VARCHAR(50),
     @last_name	VARCHAR(50),
@@ -134,60 +123,80 @@ BEGIN
 END
 GO
 
-select * from dbo.users
-
-declare @id int = 1, @name varchar(50) = 'admin', @last_name varchar(50) = 'admin', @username varchar(50) = 'admin', @password varchar (50) = 'admin'
-execute dbo.update_user @id, @name, @last_name, @username, @password
-
-declare @name varchar(50) = 'admin', @last_name varchar(50) = 'admin', @username varchar(50) = 'admin', @password varchar (50) = 'admin', @role varchar(20) = 'ADMIN'
-execute dbo.new_user @name=@name, @last_name=@last_name, @username=@username, @password=@password, @role=@role
-
-
--------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
-create or alter procedure dbo.new_website
-(
-	@user_id	INT,
-	@url		VARCHAR(500)
-)
-as
-begin
-	if exists(SELECT 1 from dbo.users where user_id = @user_id)
-	BEGIN
-		insert into dbo.websites(user_id, url)
-		values(@user_id, @url)
-	END
-	ELSE
-	BEGIN
-		raiserror ('El usuario no existe',16,1)
-	END
-end
-go
-
--------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
-create or alter procedure dbo.delete_website
-(
-	@user_id	INT,
-	@url		VARCHAR(500)
-)
-as
-begin
-	if exists(SELECT * from dbo.websites w where w.user_id = @user_id AND w.url = @url)
-	BEGIN
-		delete from 
-			dbo.websites
-		where user_id = @user_id
-	END
-	ELSE
-	BEGIN
-		raiserror ('La operacion no se pudo realizar porque la pagina o el usuario no existen',16,1)
-	END
-end
+execute dbo.update_user 1, 'admin', 'admin', 'admin', 'admin'
+select * from preferences
+execute dbo.new_user 'admin', 'admin', 'admin', 'admin', 'ADMIN'
 go
 
 
-user_id	INT				NOT NULL,
-url		VARCHAR(500)	NOT NULL,
-reindex	TINYINT			NOT NULL,
+
+-------------------------- TRIGGER AL INSERTAR UN NUEVO USUARIO --------------------------
+create or alter trigger ti_users
+on dbo.users
+for insert
+as
+begin
+	declare @id INT
+	set @id = (select user_id from inserted)
+	insert into dbo.preferences(user_id, color, icon_url, border_radius, font_size)
+	values (@id, 'blue', 'https://cdn2.iconfinder.com/data/icons/font-awesome/1792/search-512.png', 50, 14)
+end
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS USUARIO --------------------------
+create or alter procedure dbo.get_preferences
+(
+	@user_id	INT
+)
+as
+begin
+	select * from dbo.preferences p
+		where p.user_id = @user_id
+end
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PREFERENCIAS BUSCADOR --------------------------
+create or alter procedure dbo.update_preferences
+(
+	@user_id		INT,
+	@color			VARCHAR(50),
+	@icon_url		VARCHAR(500),
+	@border_radius	INT,
+	@font_size		INT
+)
+as
+begin
+	update p
+		set p.color = @color,
+			p.icon_url = @icon_url,
+			p.border_radius = @border_radius,
+			p.font_size = @font_size
+		from dbo.preferences p
+		where p.user_id = @user_id
+end
+go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+insert into dbo.websites(user_id, url, reindex)
+values	(1, 'youtube.com', 0)
 
 insert into dbo.websites(user_id, url, reindex)
 values	(1, 'youtube0.com', 0),
@@ -213,9 +222,8 @@ select user_id, string_agg(url, ',')
 	where reindex = 1
 	group by user_id
 
--- DOMAIN, www.youtube.com/*
+-- DOMINIO, www.youtube.com/*
 -- AL PONER PARA REINDEXAR UNA PAGINA, SE TIENE QUE BORRAR TODO LO QUE EMPIECE CON EL DOMINIO DE ESA PAGINA
-
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
@@ -227,10 +235,6 @@ select * from dbo.services
 	where reindex = 1
 
 select * from dbo.services
- user_id			INT				NOT NULL,
-    url_resource	VARCHAR(500)	NOT NULL,
-	url_ping		VARCHAR(500)	NOT NULL,
-	reindex			TINYINT			NOT NU
 
 insert into dbo.services(user_id, url_resource, url_ping, reindex)
 values	(1, 'youtube0.com/ping0','youtube0.com/ping', 0),
