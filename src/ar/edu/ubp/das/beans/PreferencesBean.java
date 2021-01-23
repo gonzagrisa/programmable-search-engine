@@ -1,11 +1,20 @@
 package ar.edu.ubp.das.beans;
 
 public class PreferencesBean {
+	private int userId;
 	private String color;
 	private String iconURL;
 	private int borderRadius;
 	private int fontSize;
 	
+	public int getUserId() {
+		return userId;
+	}
+
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+
 	public String getColor() {
 		return color;
 	}
