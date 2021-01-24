@@ -20,15 +20,16 @@ import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.security.Secured;
 
-@Path("/websites")
+@Path("websites")
 public class WebsitesResource {
 	
 	@Context
 	ContainerRequestContext req;
 	
-	@Path("/ping")
+	@GET
+	@Path("ping")
 	public Response ping() {
-		return Response.ok().entity("pong").build();
+		return Response.status(Status.OK).entity("pong").build();
 	}
 	
 	@GET
