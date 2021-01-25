@@ -32,7 +32,7 @@ public class UsersResource {
 	@GET
 	@Path("ping")
 	public Response ping() {
-		return Response.status(Status.OK).entity("pong").build();
+		return Response.status(Status.OK).entity("pong!").build();
 	}
 
 	@POST
