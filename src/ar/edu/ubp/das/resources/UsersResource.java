@@ -99,7 +99,7 @@ public class UsersResource {
 	}
 
 	private String issueToken(UserBean user) {
-		return Jwts.builder().setSubject("usr").claim("role", user.getRole()).claim("id", 1)
+		return Jwts.builder().setSubject("usr").claim("role", user.getRole()).claim("id", user.getUser_id())
 				.signWith(SecurityFilter.KEY).compact();
 	}
 }

@@ -2,8 +2,9 @@ package ar.edu.ubp.das.beans;
 
 public class ServiceBean {
 	private int userId;
-	private String URLresource;
-	private String URLping;
+	private int serviceId;
+	private String URLResource;
+	private String URLPing;
 	private boolean reindex;
 
 	public int getUserId() {
@@ -13,21 +14,29 @@ public class ServiceBean {
 	public void setUserId(int userId) {
 		this.userId = userId;
 	}
-
-	public String getURLresource() {
-		return URLresource;
+	
+	public int getServiceId() {
+		return serviceId;
 	}
 
-	public void setURLresource(String uRLresource) {
-		URLresource = uRLresource;
+	public void setServiceId(int serviceId) {
+		this.serviceId = userId;
 	}
 
-	public String getURLping() {
-		return URLping;
+	public String getURLResource() {
+		return URLResource;
 	}
 
-	public void setURLping(String uRLping) {
-		URLping = uRLping;
+	public void setURLResource(String uRLresource) {
+		URLResource = uRLresource;
+	}
+
+	public String getURLPing() {
+		return URLPing;
+	}
+
+	public void setURLPing(String uRLping) {
+		URLPing = uRLping;
 	}
 
 	public boolean isReindex() {
