@@ -21,7 +21,7 @@ import io.jsonwebtoken.security.Keys;
 @Secured
 @Provider
 @Priority(Priorities.AUTHENTICATION)
-public class SecurityFilter implements ContainerRequestFilter{
+public class SecurityFilter implements ContainerRequestFilter {
 	private static final String AUTHORIZATION_PREFIX = "Bearer ";
 	public static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
@@ -29,37 +29,32 @@ public class SecurityFilter implements ContainerRequestFilter{
 	public void filter(ContainerRequestContext requestContext) throws IOException {
 		String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 		if (!isHeaderValid(authHeader)) {
-			abortWithUnauthorized(requestContext);
+			this.abortWithUnauthorized(requestContext);
 		}
 		try {
 			String token = authHeader.substring(AUTHORIZATION_PREFIX.length()).trim();
-            AppSecurityContext secContext = 
-            		new AppSecurityContext(validateToken(token), requestContext.getSecurityContext().isSecure());
+			AppSecurityContext secContext = new AppSecurityContext(this.validateToken(token),
+					requestContext.getSecurityContext().isSecure());
 			requestContext.setSecurityContext(secContext);
-			requestContext.setProperty("id", 1);
+			requestContext.setProperty("id", secContext.getUserId());
 		} catch (Exception e) {
-			abortWithUnauthorized(requestContext);
+			this.abortWithUnauthorized(requestContext);
 		}
 	}
-	
+
 	private boolean isHeaderValid(String authorizationHeader) {
 		return authorizationHeader != null
 				&& authorizationHeader.toLowerCase().startsWith(AUTHORIZATION_PREFIX.toLowerCase());
 	}
-	
+
 	private void abortWithUnauthorized(ContainerRequestContext requestContext) {
-		requestContext
-				.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-				.entity("El usuario no puede acceder al recurso")
-				.build());
+		requestContext.abortWith(
+				Response.status(Response.Status.UNAUTHORIZED).entity("El usuario no puede acceder al recurso").build());
 	}
-	
+
 	private UserBean validateToken(String token) throws Exception {
 		Jws<Claims> jws;
-		jws = Jwts.parserBuilder()
-				  .setSigningKey(KEY)
-				  .build()
-				  .parseClaimsJws(token);
+		jws = Jwts.parserBuilder().setSigningKey(KEY).build().parseClaimsJws(token);
 		UserBean user = new UserBean();
 		user.setUser_id((Integer) jws.getBody().get("id"));
 		user.setRole(jws.getBody().get("role").toString());
