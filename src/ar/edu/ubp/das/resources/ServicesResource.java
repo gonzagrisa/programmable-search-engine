@@ -67,7 +67,5 @@ public class ServicesResource {
 			// Genezamos todas las excepciones que puedan saltar en una sola
 			throw new Exception("Error al probar el endpoint de ping");
 		}
-		
-		
 	}
 }

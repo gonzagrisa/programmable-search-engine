@@ -29,7 +29,11 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 			this.setParameter(2, service.getURLResource());
 			this.setParameter(3, service.getURLPing());
 			if (this.executeUpdate() == 0)
-				throw new SQLException("Hubo un problema al actualizar");
+				throw new SQLException("Hubo un problema al insertar el servicio");
+		} catch(SQLException e) {
+			if (e.getMessage().contains("duplicate key value")) {
+				throw new SQLException("El servicio ya se encuentra registrado");
+			}
 		} finally {
 			this.close();
 		}		
