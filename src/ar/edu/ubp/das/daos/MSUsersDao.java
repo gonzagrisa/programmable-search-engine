@@ -19,9 +19,13 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(3, user.getUsername());
 			this.setParameter(4, user.getPassword());
 			this.executeUpdate();
+		} catch(SQLException e) {
+			if (e.getMessage().contains("duplicate key value")) {
+				throw new SQLException("El usuario ya se encuentra registrado");
+			}
 		} finally {
 			this.close();
-		}
+		}	
 	}
 
 	@Override
