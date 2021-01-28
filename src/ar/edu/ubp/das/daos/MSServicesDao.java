@@ -24,19 +24,40 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	public void insert(ServiceBean service) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.insert_service(?,?,?)");
+			this.setProcedure("dbo.insert_service(?,?,?,?)");
 			this.setParameter(1, service.getUserId());
 			this.setParameter(2, service.getURLResource());
 			this.setParameter(3, service.getURLPing());
+			this.setParameter(4, service.getProtocol());
 			if (this.executeUpdate() == 0)
 				throw new SQLException("Hubo un problema al insertar el servicio");
 		} catch(SQLException e) {
 			if (e.getMessage().contains("duplicate key value")) {
 				throw new SQLException("El servicio ya se encuentra registrado");
 			}
+			throw e;
 		} finally {
 			this.close();
 		}		
+	}
+	
+	@Override
+	public void update(ServiceBean service) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.update_service(?,?,?,?)");
+			this.setParameter(1, service.getUserId());
+			this.setParameter(2, service.getURLResource());
+			this.setParameter(3, service.getURLPing());
+			this.setParameter(4, service.getProtocol());
+			int affectedRows = this.executeUpdate();
+			if (affectedRows == 0) {
+				throw new SQLException("El servicio a actualizar no existe");
+			}
+		} finally {
+			this.close();
+		}		
+		
 	}
 
 	@Override
@@ -91,12 +112,6 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	public List<ServiceBean> select(ServiceBean arg0) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public void update(ServiceBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

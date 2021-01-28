@@ -5,7 +5,14 @@ public class ServiceBean {
 	private int serviceId;
 	private String URLResource;
 	private String URLPing;
+	private String protocol;
 	private boolean reindex;
+	
+	public boolean isValid() {
+		return this.URLResource != null &&
+				this.URLPing != null &&
+				this.protocol != null;
+	}
 
 	public int getUserId() {
 		return userId;
@@ -37,6 +44,14 @@ public class ServiceBean {
 
 	public void setURLPing(String uRLping) {
 		URLPing = uRLping;
+	}
+	
+	public String getProtocol() {
+		return protocol;
+	}
+	
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
 	}
 
 	public boolean isReindex() {

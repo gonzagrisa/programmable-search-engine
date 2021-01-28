@@ -20,9 +20,11 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(4, user.getPassword());
 			this.executeUpdate();
 		} catch(SQLException e) {
+			System.out.println(e);
 			if (e.getMessage().contains("duplicate key value")) {
 				throw new SQLException("El usuario ya se encuentra registrado");
 			}
+			throw e;
 		} finally {
 			this.close();
 		}	
@@ -59,7 +61,10 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(3, user.getLastName());
 			this.setParameter(4, user.getUsername());
 			this.setParameter(5, user.getPassword());
-			this.executeUpdate();
+			int affectedRows = this.executeUpdate();
+			if (affectedRows == 0) {
+				throw new SQLException("El usuario a actualizar no existe");
+			}
 		} finally {
 			this.close();
 		}

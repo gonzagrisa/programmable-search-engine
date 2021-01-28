@@ -163,34 +163,5 @@ begin
 end
 go
 
-----------------------------------------------------------------------------------------------------------------
 
-insert into dbo.websites(user_id, url, reindex)
-values	(1, 'youtube.com', 0)
-
-insert into dbo.websites(user_id, url, reindex)
-values	(1, 'youtube0.com', 0),
-		(1, 'youtube1.com', 1),
-		(1, 'youtube2.com', 1),
-		(1, 'youtube3.com', 1),
-		(1, 'youtube4.com', 1),
-		(2, 'youtube0.com', 0),
-		(2, 'youtube1.com', 0),
-		(2, 'youtube2.com', 1),
-		(2, 'youtube3.com', 1),
-		(2, 'youtube4.com', 1)
-
-select user_id, url
-	from dbo.websites
-	where reindex = 1
-	group by user_id, url
-	order by user_id
-
-
-select user_id, string_agg(url, ',')
-	from dbo.websites
-	where reindex = 1
-	group by user_id
-
--- DOMINIO, www.youtube.com/*
--- AL PONER PARA REINDEXAR UNA PAGINA, SE TIENE QUE BORRAR TODO LO QUE EMPIECE CON EL DOMINIO DE ESA PAGINA
+select * from dbo.users
