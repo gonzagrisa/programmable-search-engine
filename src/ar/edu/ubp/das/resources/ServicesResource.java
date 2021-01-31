@@ -1,6 +1,11 @@
 package ar.edu.ubp.das.resources;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.SQLException;
+import java.time.Duration;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -17,18 +22,24 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.glassfish.jersey.client.ClientConfig;
+import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
 
 import ar.edu.ubp.das.beans.ServiceBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.security.Secured;
+import io.jsonwebtoken.io.IOException;
 
 @Path("services")
 public class ServicesResource {
 
 	private static final String PROTOCOL_REST = "REST";
 	private static final String PROTOCOL_SOAP = "SOAP";
+	
+	private static final HttpClient MyHttpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
 
 	@Context
 	ContainerRequestContext req;
@@ -80,20 +91,30 @@ public class ServicesResource {
 
 	private void checkPingEndpoint(String endpoint, String protocol) throws Exception {
 		try {
-			if (protocol == PROTOCOL_REST) {
-				Client client = ClientBuilder.newClient();
-				WebTarget webTarget = client.target(endpoint);
-				Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_JSON);
-				Response response = invocationBuilder.get();
-				if (response.getStatus() > 400) {
+			System.out.println("PROBANDO ENDPOINT " + endpoint + " (" + protocol + ")");
+			if (protocol.equals(PROTOCOL_REST)) {
+				HttpRequest request = HttpRequest.newBuilder()
+						.GET()
+						.uri(URI.create(endpoint))
+						.build();
+				HttpResponse<String> response = null;
+				response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
+				System.out.println("RESPUESTA REST");
+				System.out.println(response.body());
+				if (response.statusCode() >= 400) {
 					throw new Exception();
 				}
-			} else if (protocol == PROTOCOL_SOAP) {
-				// TODO: Agregar llamada al endpoint de ping por SOAP				
+			} else if (protocol.equals(PROTOCOL_SOAP)) {
+				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
+				org.apache.cxf.endpoint.Client client = jdcf.createClient(endpoint);
+				Object obj[] = client.invoke("getList");
+				client.close();
+				System.out.println("RESPUESTA SOAP:");
+				System.out.println(obj[0]);		
 			}
 		} catch (Exception e) {
 			// Genezamos todas las excepciones que puedan saltar en una sola
-			throw new Exception("Error al probar el endpoint de ping");
+			throw new Exception("Error al impactar el endpoint de ping del servicio");
 		}
 	}
 

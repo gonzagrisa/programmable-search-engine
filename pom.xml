@@ -189,5 +189,11 @@
 			<scope>provided</scope>
 		</dependency>
 		<!-- ################# /JERSEY ################# -->
+		<!-- https://mvnrepository.com/artifact/org.apache.cxf/cxf-rt-frontend-jaxws -->
+		<dependency>
+		    <groupId>org.apache.cxf</groupId>
+		    <artifactId>cxf-rt-frontend-jaxws</artifactId>
+		    <version>3.4.2</version>
+		</dependency>
 	</dependencies>
 </project>
