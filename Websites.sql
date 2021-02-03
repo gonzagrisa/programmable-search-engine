@@ -1,16 +1,76 @@
 use users
 
+drop table dbo.websites
+
 -- ################## TABLA P�GINAS ##################
 CREATE TABLE dbo.websites
 (
-    user_id	INT				NOT NULL,
-    url		VARCHAR(500)	NOT NULL,
-	reindex	BIT				NOT NULL default 1,
+    user_id			INT				NOT NULL,
+    service_id		INT				NULL,
+    url		       	VARCHAR(500)	NOT NULL,
+    isActive        TINYINT         NOT NULL DEFAULT 1,
+	reindex			TINYINT			NOT NULL DEFAULT 1,
 	constraint PK__websites__END primary key (user_id, url),
-	constraint CK__websites__reindex__END check (reindex in (0, 1)),
-	constraint FK__websites__users__END foreign key (user_id) references dbo.users on delete cascade
+	constraint FK__websites__users__END foreign key (user_id) references dbo.users,
+    constraint FK__websites__services__END foreign key (user_id, service_id) references dbo.services (user_id, service_id) on delete cascade
 );
 go
+
+-- execute dbo.get_websites
+-- select * from dbo.websites
+
+insert into dbo.websites(user_id, url, reindex, isActive)
+values	(1, 'https://www.youtube.com', 1, 1)
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO SELECCIONAR PÁGINAS POR USUARIO --------------------------
+-- Este procedimiento se usa tanto del crawler (user_id = NULL) como del ABM (user_id != NULL)
+CREATE OR ALTER PROCEDURE dbo.get_websites (@user_id int = NULL)
+AS
+BEGIN
+IF (@user_id IS NULL)
+BEGIN
+	select user_id, string_agg(url, ',') as websites
+	from dbo.websites
+	where reindex = 1 and isActive = 1
+	group by user_id
+END
+IF (@user_id IS NOT NULL)
+BEGIN
+	select user_id, url, isActive, reindex from dbo.websites w
+	where w.user_id = @user_id
+END
+END
+go
+
+-- execute dbo.get_websites @user_id = 12
+-------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
+CREATE OR ALTER PROCEDURE dbo.new_website
+(
+	@user_id	INT,
+	@url		VARCHAR(500),
+	@service_id INT = NULL
+)
+as
+begin
+	if exists(
+		SELECT 1 
+		from dbo.websites w
+		where w.user_id = @user_id
+		AND dbo.get_domain(w.url) = dbo.get_domain(@url)
+	)
+	BEGIN
+		raiserror ('El dominio ya se encuentra registrado',16,1)
+		return
+	END
+	ELSE
+	BEGIN
+		insert into dbo.websites(user_id, url, service_id)
+		values(@user_id, @url, @service_id)
+	END	
+end
+go
+--------------------------------------------------------------------------------------------------------------
 
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
 RETURNS VARCHAR(500)
@@ -49,44 +109,6 @@ END
 go
 */
 
-CREATE or ALTER PROCEDURE dbo.get_websites
-(
-	@user_id	INT
-)
-as
-begin
-	select * from dbo.websites w
-		where w.user_id = @user_id
-end
-go
-
-execute dbo.get_websites 1
-go
-
--------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
-CREATE OR ALTER PROCEDURE dbo.new_website
-(
-	@user_id	INT,
-	@url		VARCHAR(500)
-)
-as
-begin
-	if exists(SELECT 1 
-				from dbo.websites w
-				where w.user_id = @user_id
-				AND dbo.get_domain(w.url) = dbo.get_domain(@url))
-	BEGIN
-		raiserror ('El Dominio ya se encuentra registrado',16,1)
-		return
-	END
-	ELSE
-	BEGIN
-		insert into dbo.websites(user_id, url)
-		values(@user_id, @url)
-	END	
-end
-go
-
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
 create or alter procedure dbo.delete_website
 (
@@ -115,21 +137,6 @@ select * from dbo.websites
 
 ----------------------------------------------------------------------------------------------------------------
 
-insert into dbo.websites(user_id, url, reindex)
-values	(1, 'youtube.com', 0)
-
-insert into dbo.websites(user_id, url, reindex)
-values	(1, 'youtube0.com', 0),
-		(1, 'youtube1.com', 1),
-		(1, 'youtube2.com', 1),
-		(1, 'youtube3.com', 1),
-		(1, 'youtube4.com', 1),
-		(2, 'youtube0.com', 0),
-		(2, 'youtube1.com', 0),
-		(2, 'youtube2.com', 1),
-		(2, 'youtube3.com', 1),
-		(2, 'youtube4.com', 1)
-
 select user_id, url
 	from dbo.websites
 	where reindex = 1
@@ -137,9 +144,9 @@ select user_id, url
 	order by user_id
 
 
-select user_id, string_agg(url, ',')
+select user_id, string_agg(url, ',') as pages
 	from dbo.websites
-	where reindex = 1
+	where reindex = 1 and isActive = 1
 	group by user_id
 
 -- DOMINIO, www.youtube.com/*

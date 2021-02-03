@@ -29,7 +29,7 @@ public class WebsitesResource {
 	@GET
 	@Path("ping")
 	public Response ping() {
-		return Response.status(Status.OK).entity("pong").build();
+		return Response.status(Status.OK).entity("pong!").build();
 	}
 	
 	@GET
@@ -39,7 +39,6 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
 			List<WebsiteBean> websites = dao.select((Integer) req.getProperty("id"));
-			System.out.println("TAMANO WEBSITES: " + websites.size());
 			return Response.ok().entity(websites).build();
 		} catch (SQLException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -51,13 +50,12 @@ public class WebsitesResource {
 	@POST
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response addWebsites(List<WebsiteBean> websites) {
+	public Response addWebsite(WebsiteBean website) {
 		try {
-			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Preferences", "ar.edu.ubp.das");
-			int id = (Integer) req.getProperty("id");
-			for (WebsiteBean websiteBean : websites) {
-				dao.insert(websiteBean, id);
-			}
+			this.checkBody(website);
+
+			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
+			dao.insert(website);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -68,6 +66,21 @@ public class WebsitesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteWebsite() {
 		return Response.ok().build();
+	}
+	
+	private void checkBody(WebsiteBean web) throws Exception {
+		try {
+			if (web != null) {
+				web.setUserId((Integer) req.getProperty("id"));
+			} else {
+				throw new Exception();
+			}
+			if (!web.isValid()) {
+				throw new Exception();
+			}
+		} catch (Exception e) {
+			throw new Exception("Debe enviar la información requerida de la página");
+		}
 	}
 	
 }

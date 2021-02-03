@@ -9,9 +9,13 @@ CREATE TABLE dbo.services
     service_id		INT				NOT NULL IDENTITY,
     url_resource	VARCHAR(500)	NOT NULL,
 	url_ping		VARCHAR(500)	NOT NULL,
-	protocol        VARCHAR(4)    NOT NULL,
+	protocol        VARCHAR(4)    	NOT NULL,
 	reindex			TINYINT			NOT NULL default 1,
-	constraint PK__services__END primary key (user_id, url_resource),
+	isActive		TINYINT			NOT NULL default 1,
+	isUp			TINYINT			NOT NULL default 1,
+	constraint PK__services__END primary key (user_id, service_id),
+	constraint PK__services__UK_service_id__END UNIQUE (service_id),
+	constraint PK__services__UK_url_resource__END UNIQUE (url_resource),
 	constraint PK__services__valid_protocol__END CHECK (protocol in ('REST', 'SOAP')),
 	constraint FK__services__users__END foreign key (user_id) references dbo.users on delete cascade
 );
@@ -23,10 +27,9 @@ select user_id, string_agg(url_resource, ',')
 	where reindex = 1
 	group by user_id
 
-select * from dbo.services
-	where reindex = 1
+-- select * from dbo.services
 
-select * from dbo.services
+-- delete from dbo.services
 go
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO

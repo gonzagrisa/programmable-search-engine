@@ -12,23 +12,19 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
 
 import ar.edu.ubp.das.beans.ServiceBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.security.Secured;
-import io.jsonwebtoken.io.IOException;
 
 @Path("services")
 public class ServicesResource {
@@ -99,18 +95,17 @@ public class ServicesResource {
 						.build();
 				HttpResponse<String> response = null;
 				response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
-				System.out.println("RESPUESTA REST");
-				System.out.println(response.body());
 				if (response.statusCode() >= 400) {
 					throw new Exception();
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
-				org.apache.cxf.endpoint.Client client = jdcf.createClient(endpoint);
-				Object obj[] = client.invoke("getList");
+				// FIXME: A partir de esta línea no pasa nada
+				Client client = jdcf.createClient(endpoint);
+				Object res[] = client.invoke("ping");
 				client.close();
 				System.out.println("RESPUESTA SOAP:");
-				System.out.println(obj[0]);		
+				System.out.println(res[0]);		
 			}
 		} catch (Exception e) {
 			// Genezamos todas las excepciones que puedan saltar en una sola
