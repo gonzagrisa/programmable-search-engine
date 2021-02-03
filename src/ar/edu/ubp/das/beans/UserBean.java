@@ -2,6 +2,8 @@ package ar.edu.ubp.das.beans;
 
 import java.security.Principal;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 public class UserBean implements Principal {
 	private Integer user_id;
 	private String role;
@@ -42,6 +44,7 @@ public class UserBean implements Principal {
 		this.password = password;
 	}
 
+	@JsonbTransient
 	@Override
 	public String getName() {
 		return username;
@@ -65,9 +68,12 @@ public class UserBean implements Principal {
 	
 	@Override
 	public String toString() {
-		String output = "name: " + this.firstName;
-		output += " username: " + this.username;
-		output += " password: " + this.password;
+		String output = "user_id: " + this.user_id;
+		output += "\nusername: " + this.username;
+		output += "\npassword: " + this.password;
+		output += "\nfirstName: " + this.password;
+		output += "\nlastName: " + this.password;
+		output += "\nrole: " + this.role;
 		return output;
 	}
 

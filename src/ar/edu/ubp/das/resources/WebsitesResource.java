@@ -38,7 +38,6 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
 			List<WebsiteBean> websites = dao.select((Integer) req.getProperty("id"));
-			System.out.println("TAMANO WEBSITES: " + websites.size());
 			return Response.ok().entity(websites).build();
 		} catch (SQLException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();

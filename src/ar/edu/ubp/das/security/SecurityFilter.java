@@ -33,10 +33,11 @@ public class SecurityFilter implements ContainerRequestFilter{
 		}
 		try {
 			String token = authHeader.substring(AUTHORIZATION_PREFIX.length()).trim();
+			UserBean user = validateToken(token);
             AppSecurityContext secContext = 
             		new AppSecurityContext(validateToken(token), requestContext.getSecurityContext().isSecure());
 			requestContext.setSecurityContext(secContext);
-			requestContext.setProperty("id", 1);
+			requestContext.setProperty("id", user.getUser_id());
 		} catch (Exception e) {
 			abortWithUnauthorized(requestContext);
 		}

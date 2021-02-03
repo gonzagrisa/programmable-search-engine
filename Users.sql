@@ -13,6 +13,7 @@ CREATE TABLE dbo.users (
 	last_name	VARCHAR(50)			NOT NULL,
 	password	VARBINARY(32)		NOT NULL,
 	role		VARCHAR(20)			NOT NULL,
+	status		BIT					NOT NULL,
 	token_api	UNIQUEIDENTIFIER default NEWID() NULL,
 	constraint PK__users__END primary key (user_id),
 	constraint UK__users__END unique (username),
@@ -45,14 +46,56 @@ CREATE TABLE dbo.services
 );
 go
 
-
 /*
 * *****************************************
 *	PROCEDIMIENTOS ALMACENADOS
 * *****************************************
 */
 
--------------------------- PROCEDIMIENTO ALMACENADO VALIDAR USUARIO --------------------------
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER TODOS LOS USUARIOS ACTIVOS --------------------------
+create or alter procedure dbo.get_users
+as
+begin
+	select * from dbo.users u
+	where u.role = 'USER'
+	and u.status = 1
+	
+end
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI NOMBRE DE USUARIO ESTA EN USO --------------------------
+create or alter procedure dbo.check_username
+(
+	@username	varchar(50),
+	@user_id	INT = -1
+)
+as
+begin	
+	select * from dbo.users u
+		where u.username = @username
+		and u.user_id != @user_id
+end
+go
+
+execute dbo.check_username 'admin', 1
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER DATOS DE UN USUARIO --------------------------
+create or alter procedure dbo.get_user_info
+(
+	@user_id	INT
+)
+as
+begin
+	select * from dbo.users
+		where user_id = @user_id
+end
+go
+
+execute dbo.get_user_info 1
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO LOGIN --------------------------
 create or alter procedure dbo.validate_user
 (
 	@username	varchar(50),
@@ -69,7 +112,11 @@ begin
 end
 go
 
--------------------------- PROCEDIMIENTO ALMACENADO CREAR NUEVO USUARIO --------------------------
+select * from dbo.users
+
+execute dbo.validate_user 'admin', 'secret'
+
+-------------------------- PROCEDIMIENTO ALMACENADO REGISTRAR --------------------------
 create or alter procedure dbo.new_user
 (
 	@name		varchar(50),
@@ -83,9 +130,25 @@ begin
 	declare @crypt varbinary(32)
 	select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
-	insert into dbo.users (name, last_name, username, password, role, token_api)
-	values	(@name, @last_name, @username, @crypt, @role, null)	
+	insert into dbo.users (name, last_name, username, password, role, token_api, status)
+	values	(@name, @last_name, @username, @crypt, @role, null, 1)	
 end
+go
+
+
+execute dbo.new_user 'user2', 'user2', 'user3', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user4', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user5', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user6', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user7', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user8', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user9', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user10', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user11', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user12', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user13', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user14', 'secret'
+execute dbo.new_user 'user2', 'user2', 'user15', 'secret'
 go
 
 -------------------------- TRIGGER PARA INSERTAR LAS OPCIONES POR DEFECTO AL NUEVO USUARIO CREADO --------------------------
@@ -104,44 +167,59 @@ go
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR INFORMACION USUARIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_user
     @id			INT,
-	@name		VARCHAR(50),
-    @last_name	VARCHAR(50),
-	@username	VARCHAR(50),
+	@username	VARCHAR(50) = null,
+	@name		VARCHAR(50) = null,
+    @last_name	VARCHAR(50) = null,
+	@password	VARCHAR(50) = null
+AS
+BEGIN
+	
+	if (@password IS NOT null)
+	begin
+		declare @crypt varbinary(32)
+		select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
+
+		update u
+		set password = @crypt
+		from dbo.users u
+		where u.user_id = @id
+	end
+	if (@name IS NOT null AND @last_name IS NOT null AND @username IS NOT null)
+	begin
+		update u
+			set name = @name,
+				last_name = @last_name,
+				username = @username
+			from dbo.users u
+			where u.user_id = @id
+	end
+END
+GO
+
+execute dbo.update_user 5, 'samuele1', 'samuele1', 'samuele1'
+select * from dbo.users
+select * from preferences
+execute dbo.new_user 'admin', 'admin', 'admin', 'admin', 'ADMIN'
+go
+
+
+-------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR CONTRASEÑA ANTIGÜA --------------------------
+CREATE or ALTER PROCEDURE dbo.check_password
+    @id			INT,
 	@password	VARCHAR(50)
 AS
 BEGIN
 	declare @crypt varbinary(32)
 	select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
-    update u
-	set name = @name,
-		last_name = @last_name,
-		username = @username,
-		password = @crypt
-	from dbo.users u
-	where u.user_id = @id
+	select * from dbo.users u
+		where u.user_id = @id
+		AND u.password = @crypt
 END
 GO
 
-execute dbo.update_user 1, 'admin', 'admin', 'admin', 'admin'
-select * from preferences
-execute dbo.new_user 'admin', 'admin', 'admin', 'admin', 'ADMIN'
-go
-
-
-
--------------------------- TRIGGER AL INSERTAR UN NUEVO USUARIO --------------------------
-create or alter trigger ti_users
-on dbo.users
-for insert
-as
-begin
-	declare @id INT
-	set @id = (select user_id from inserted)
-	insert into dbo.preferences(user_id, color, icon_url, border_radius, font_size)
-	values (@id, 'blue', 'https://cdn2.iconfinder.com/data/icons/font-awesome/1792/search-512.png', 50, 14)
-end
-go
+select * from dbo.users
+execute dbo.check_password 1, 'admin1'
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS USUARIO --------------------------
 create or alter procedure dbo.get_preferences
@@ -176,7 +254,23 @@ begin
 end
 go
 
+select * from dbo.users
 
+-------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR USUARIO --------------------------
+create or alter procedure dbo.delete_account
+(
+	@user_id		INT
+)
+as
+begin
+	update u
+		set status = 0
+		from dbo.users u
+		where u.user_id = @user_id
+end
+go
+
+select * from dbo.users
 
 
 
