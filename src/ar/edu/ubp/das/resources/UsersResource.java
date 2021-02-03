@@ -37,7 +37,7 @@ public class UsersResource {
 	@GET
 	@Path("ping")
 	public Response ping() {
-		return Response.status(Status.OK).entity("pong").build();
+		return Response.status(Status.OK).entity("pong!").build();
 	}
 	
 	@POST
@@ -48,7 +48,7 @@ public class UsersResource {
 			String token = issueToken(authenticate(user));
 			return Response.ok(token).build();
 		} catch (Exception e) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("Nombre de Usuario o Contraseña Incorrectos")
+			return Response.status(Response.Status.BAD_REQUEST).entity("Nombre de Usuario o Contraseï¿½a Incorrectos")
 					.build();
 		}
 	}
@@ -167,7 +167,7 @@ public class UsersResource {
 			if (dao.valid(user)) {
 				return Response.status(Status.OK).build();
 			}
-			return Response.status(Status.BAD_REQUEST).entity("Contraseña erronea").build();
+			return Response.status(Status.BAD_REQUEST).entity("Contraseï¿½a erronea").build();
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}

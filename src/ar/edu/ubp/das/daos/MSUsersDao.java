@@ -14,20 +14,29 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 		try {
 			this.connect();
 			this.setProcedure("dbo.new_user(?,?,?,?)");
-			this.setParameter(1, user.getName());
+			this.setParameter(1, user.getFirstName());
 			this.setParameter(2, user.getLastName());
 			this.setParameter(3, user.getUsername());
 			this.setParameter(4, user.getPassword());
 			this.executeUpdate();
+		} catch(SQLException e) {
+			System.out.println(e);
+			if (e.getMessage().contains("duplicate key value")) {
+				throw new SQLException("El usuario ya se encuentra registrado");
+			}
+			throw e;
 		} finally {
 			this.close();
-		}
+		}	
 	}
 
 	@Override
 	public UserBean make(ResultSet result) throws SQLException {
 		UserBean user = new UserBean();
 		user.setUsername(result.getString("username"));
+		user.setFirstName(result.getString("name"));
+		user.setLastName(result.getString("last_name"));
+		user.setRole(result.getString("role"));
 		user.setUser_id(result.getInt("user_id"));
 		user.setFirstName(result.getString("name"));
 		user.setLastName(result.getString("last_name"));
@@ -53,11 +62,14 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.connect();
 			this.setProcedure("dbo.update_user(?,?,?,?,?)");
 			this.setParameter(1, user.getUser_id());
-			this.setParameter(2, user.getName());
+			this.setParameter(2, user.getFirstName());
 			this.setParameter(3, user.getLastName());
 			this.setParameter(4, user.getUsername());
 			this.setParameter(5, user.getPassword());
-			this.executeUpdate();
+			int affectedRows = this.executeUpdate();
+			if (affectedRows == 0) {
+				throw new SQLException("El usuario a actualizar no existe");
+			}
 		} finally {
 			this.close();
 		}
@@ -110,7 +122,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setProcedure("dbo.delete_account(?)");
 			this.setParameter(1, id);
 			if (this.executeUpdate() == 0)
-				throw new SQLException("Error al ejecutar la operación");
+				throw new SQLException("Error al ejecutar la operaciï¿½n");
 			return;
 		} finally {
 			this.close();

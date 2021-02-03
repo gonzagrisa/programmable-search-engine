@@ -1,20 +1,15 @@
 package ar.edu.ubp.das.beans;
 
 public class WebsiteBean {
-	private int userId;
+	private Integer userId;
 	private String url;
-	private boolean reindex;
 	
-	public int getUserId() {
+	public Integer getUserId() {
 		return userId;
 	}
 	
 	public String getUrl() {
 		return url;
-	}
-	
-	public boolean isReindex() {
-		return reindex;
 	}
 	
 	public void setUserId(int userId) {
@@ -25,7 +20,9 @@ public class WebsiteBean {
 		this.url = url;
 	}
 	
-	public void setReindex(boolean reindex) {
-		this.reindex = reindex;
+	// Datos obligatorios: userId y url
+	public boolean isValid() {
+		return this.getUserId() != null &&
+				this.getUrl() != null;
 	}
 }

@@ -35,4 +35,8 @@ public class AppSecurityContext implements SecurityContext{
 	public String getAuthenticationScheme() {
 		return SecurityContext.FORM_AUTH;
 	}
+	
+	public int getUserId() {
+		return this.user.getUser_id();
+	}
 }
