@@ -43,7 +43,7 @@
 		<init-param>
 			<param-name>cors.allowed.headers</param-name>
 			<!-- add the headers here, that you want to read from REQUEST -->
-			<param-value>Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
+			<param-value>Origin,Accept,Authorization,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>
 		</init-param>
 		<init-param>
 			<param-name>cors.exposed.headers</param-name>
