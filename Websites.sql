@@ -6,21 +6,23 @@ drop table dbo.websites
 CREATE TABLE dbo.websites
 (
     user_id			INT				NOT NULL,
-    service_id		INT				NULL,
     url		       	VARCHAR(500)	NOT NULL,
-    isActive        TINYINT         NOT NULL DEFAULT 1,
-	reindex			TINYINT			NOT NULL DEFAULT 1,
-	constraint PK__websites__END primary key (user_id, url),
+    service_id		INT				NULL,
+    isActive        BIT				NOT NULL DEFAULT 1,
+	indexed			BIT				NOT NULL DEFAULT 0,
+	reindex			BIT				NOT NULL DEFAULT 1,																							-- Agregar Campo Indexed (para el frontend)
+	constraint PK__websites__END primary key (user_id, url),																					-- Va a haber problemas cuando se haga el delete y despues se inserte de nuevo la misma url
 	constraint FK__websites__users__END foreign key (user_id) references dbo.users,
     constraint FK__websites__services__END foreign key (user_id, service_id) references dbo.services (user_id, service_id) on delete cascade
 );
 go
 
--- execute dbo.get_websites
+
+-- execute dbo.get_websites 1
 -- select * from dbo.websites
 
-insert into dbo.websites(user_id, url, reindex, isActive)
-values	(1, 'https://www.youtube.com', 1, 1)
+insert into dbo.websites(user_id, url)
+values	(1, 'https://www.youtube.com')
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO SELECCIONAR PÁGINAS POR USUARIO --------------------------
@@ -37,13 +39,19 @@ BEGIN
 END
 IF (@user_id IS NOT NULL)
 BEGIN
-	select user_id, url, isActive, reindex from dbo.websites w
+	select user_id, url, isActive, reindex, indexed
+		from dbo.websites w
 	where w.user_id = @user_id
 END
 END
 go
 
--- execute dbo.get_websites @user_id = 12
+-- execute dbo.get_websites @user_id = 2
+
+update w
+	set reindex = 0
+	from dbo.websites w
+	where w.url = 'mercadolibre9.com'
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.new_website
 (
@@ -70,6 +78,16 @@ begin
 	END	
 end
 go
+
+execute dbo.new_website 2, 'mercadolibre.com'
+execute dbo.new_website 2, 'mercadolibre2.com'
+execute dbo.new_website 2, 'mercadolibre3.com'
+execute dbo.new_website 2, 'mercadolibre4.com'
+execute dbo.new_website 2, 'mercadolibre5.com'
+execute dbo.new_website 2, 'mercadolibre6.com'
+execute dbo.new_website 2, 'mercadolibre7.com'
+execute dbo.new_website 2, 'mercadolibre8.com'
+execute dbo.new_website 2, 'mercadolibre9.com'
 --------------------------------------------------------------------------------------------------------------
 
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
