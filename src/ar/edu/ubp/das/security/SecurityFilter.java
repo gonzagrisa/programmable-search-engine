@@ -37,7 +37,7 @@ public class SecurityFilter implements ContainerRequestFilter {
             AppSecurityContext secContext = 
             		new AppSecurityContext(validateToken(token), requestContext.getSecurityContext().isSecure());
 			requestContext.setSecurityContext(secContext);
-			requestContext.setProperty("id", user.getUser_id());
+			requestContext.setProperty("id", user.getUserId());
 		} catch (Exception e) {
 			this.abortWithUnauthorized(requestContext);
 		}
@@ -57,7 +57,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 		Jws<Claims> jws;
 		jws = Jwts.parserBuilder().setSigningKey(KEY).build().parseClaimsJws(token);
 		UserBean user = new UserBean();
-		user.setUser_id((Integer) jws.getBody().get("id"));
+		user.setUserId((Integer) jws.getBody().get("id"));
 		user.setRole(jws.getBody().get("role").toString());
 		return user;
 	}

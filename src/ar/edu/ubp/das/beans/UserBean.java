@@ -5,23 +5,23 @@ import java.security.Principal;
 import javax.json.bind.annotation.JsonbTransient;
 
 public class UserBean implements Principal {
-	private Integer user_id;
+	private Integer userId;
 	private String role;
 	private String firstName;
 	private String lastName;
 	private String username;
 	private String password;
 	
-	public Integer getUser_id() {
-		return user_id;
+	public Integer getUserId() {
+		return userId;
 	}
 	
 	public String getRole() {
 		return role;
 	}
 	
-	public void setUser_id(Integer user_id) {
-		this.user_id = user_id;
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 	
 	public void setRole(String role) {
@@ -68,11 +68,11 @@ public class UserBean implements Principal {
 	
 	@Override
 	public String toString() {
-		String output = "user_id: " + this.user_id;
+		String output = "user_id: " + this.userId;
 		output += "\nusername: " + this.username;
 		output += "\npassword: " + this.password;
-		output += "\nfirstName: " + this.password;
-		output += "\nlastName: " + this.password;
+		output += "\nfirstName: " + this.firstName;
+		output += "\nlastName: " + this.lastName;
 		output += "\nrole: " + this.role;
 		return output;
 	}

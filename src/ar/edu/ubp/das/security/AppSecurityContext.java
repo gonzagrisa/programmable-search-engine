@@ -37,6 +37,6 @@ public class AppSecurityContext implements SecurityContext{
 	}
 	
 	public int getUserId() {
-		return this.user.getUser_id();
+		return this.user.getUserId();
 	}
 }

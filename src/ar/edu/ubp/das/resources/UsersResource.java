@@ -48,7 +48,7 @@ public class UsersResource {
 			String token = issueToken(authenticate(user));
 			return Response.ok(token).build();
 		} catch (Exception e) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("Nombre de Usuario o Contrase�a Incorrectos")
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
 					.build();
 		}
 	}
@@ -179,7 +179,7 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateUser(UserBean user) {
 		try {
-			user.setUser_id((Integer) request.getProperty("id"));
+			user.setUserId((Integer) request.getProperty("id"));
 			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
 			dao.update(user);
 			return Response.status(Status.NO_CONTENT).build();
@@ -230,6 +230,7 @@ public class UsersResource {
 	private UserBean authenticate(UserBean user) throws Exception {
 		Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
 		UserBean userFound = dao.find(user);
+		System.out.println(userFound);
 		if (userFound != null)
 			return userFound;
 		else {
@@ -240,7 +241,7 @@ public class UsersResource {
 	private String issueToken(UserBean user) {
 		return Jwts.builder()
 				.setSubject("usr")
-				.claim("id", user.getUser_id())
+				.claim("id", user.getUserId())
 				.claim("username", user.getUsername())
 				.claim("role", user.getRole())
 				.signWith(SecurityFilter.KEY).compact();
@@ -249,7 +250,7 @@ public class UsersResource {
 	private String issueToken(UserBean user, Integer impersonator) {
 		return Jwts.builder()
 				.setSubject("usr")
-				.claim("id", user.getUser_id())
+				.claim("id", user.getUserId())
 				.claim("username", user.getUsername())
 				.claim("role", user.getRole())
 				.claim("impersonator", impersonator)

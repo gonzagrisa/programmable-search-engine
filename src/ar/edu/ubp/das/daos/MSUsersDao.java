@@ -33,15 +33,12 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	@Override
 	public UserBean make(ResultSet result) throws SQLException {
 		UserBean user = new UserBean();
+		user.setUserId(result.getInt("user_id"));
 		user.setUsername(result.getString("username"));
 		user.setFirstName(result.getString("name"));
 		user.setLastName(result.getString("last_name"));
 		user.setRole(result.getString("role"));
-		user.setUser_id(result.getInt("user_id"));
-		user.setFirstName(result.getString("name"));
-		user.setLastName(result.getString("last_name"));
 		user.setPassword(result.getString("password"));
-		user.setRole(result.getString("role"));
 		return user;
 	}
 
@@ -61,7 +58,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 		try {
 			this.connect();
 			this.setProcedure("dbo.update_user(?,?,?,?,?)");
-			this.setParameter(1, user.getUser_id());
+			this.setParameter(1, user.getUserId());
 			this.setParameter(2, user.getFirstName());
 			this.setParameter(3, user.getLastName());
 			this.setParameter(4, user.getUsername());
@@ -80,7 +77,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 		try {
 			this.connect();
 			this.setProcedure("dbo.check_password(?,?)");
-			this.setParameter(1, user.getUser_id());
+			this.setParameter(1, user.getUserId());
 			this.setParameter(2, user.getPassword());
 			if (this.executeQuery().size() == 0)
 				return false;
@@ -146,10 +143,10 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	public List<UserBean> select(UserBean user) throws SQLException {
 		try {
 			this.connect();
-			if (user.getUser_id() != null) {
+			if (user.getUserId() != null) {
 				this.setProcedure("dbo.check_username(?,?)");
 				this.setParameter(1, user.getUsername());
-				this.setParameter(2, user.getUser_id());
+				this.setParameter(2, user.getUserId());
 			} else {
 				this.setProcedure("dbo.check_username(?)");
 				this.setParameter(1, user.getUsername());
