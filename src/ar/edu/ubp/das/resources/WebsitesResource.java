@@ -37,7 +37,7 @@ public class WebsitesResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getWebsites() {
 		try {
-			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
+			Dao<WebsiteBean, Integer> dao = this.getDao();
 			List<WebsiteBean> websites = dao.select((Integer) req.getProperty("id"));
 			return Response.ok().entity(websites).build();
 		} catch (SQLException e) {
@@ -54,9 +54,28 @@ public class WebsitesResource {
 		try {
 			this.checkBody(website);
 
-			Dao<WebsiteBean, Integer> dao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
+			Dao<WebsiteBean, Integer> dao = this.getDao();
 			dao.insert(website);
 			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path("check-domain")
+	@Secured
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response checkDomain(WebsiteBean website) {
+		try {
+			website.setUserId((Integer) req.getProperty("id"));
+			Dao<WebsiteBean, Integer> dao = this.getDao();
+			if (dao.select(website).size() > 0) {
+				return Response.status(Status.CONFLICT).entity("Dominio ya registrado").build();
+			}
+			return Response.status(Status.OK).build();
+		} catch (SQLException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
@@ -66,6 +85,10 @@ public class WebsitesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteWebsite() {
 		return Response.ok().build();
+	}
+	
+	private Dao<WebsiteBean, Integer> getDao() throws SQLException {
+		return DaoFactory.getDao("Websites", "ar.edu.ubp.das");
 	}
 	
 	private void checkBody(WebsiteBean web) throws Exception {
@@ -79,7 +102,7 @@ public class WebsitesResource {
 				throw new Exception();
 			}
 		} catch (Exception e) {
-			throw new Exception("Debe enviar la informaci√≥n requerida de la p√°gina");
+			throw new Exception("Debe enviar la informaciÛn requerida de la p·gina");
 		}
 	}
 	

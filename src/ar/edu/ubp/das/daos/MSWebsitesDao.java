@@ -15,6 +15,9 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 		WebsiteBean web = new WebsiteBean();
 		web.setUserId(result.getInt("user_id"));
 		web.setUrl(result.getString("url"));
+		web.setIsActive(result.getBoolean("isActive"));
+		web.setReindex(result.getBoolean("reindex"));
+		web.setIndexed(result.getBoolean("indexed"));
 		return web;
 	}
 	
@@ -76,8 +79,7 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 
 	@Override
-	public WebsiteBean find(WebsiteBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
+	public WebsiteBean find(WebsiteBean website) throws SQLException {
 		return null;
 	}
 
@@ -88,9 +90,17 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 
 	@Override
-	public List<WebsiteBean> select(WebsiteBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public List<WebsiteBean> select(WebsiteBean website) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.check_domain(?,?)");
+			this.setParameter(1, website.getUserId());
+			this.setParameter(2, website.getUrl());
+			return this.executeQuery();
+		} finally {
+			this.close();
+		}
+		
 	}
 
 	@Override
