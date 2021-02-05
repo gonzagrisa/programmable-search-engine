@@ -35,6 +35,7 @@ public class UsersResource {
 	ContainerRequestContext request;
 
 	@GET
+	@Secured
 	@Path("ping")
 	public Response ping() {
 		return Response.status(Status.OK).entity("pong!").build();
@@ -63,7 +64,7 @@ public class UsersResource {
 				return Response.status(Status.BAD_REQUEST).entity("Datos faltantes para el registro del usuario")
 						.build();
 			}
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.insert(user);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
@@ -77,7 +78,7 @@ public class UsersResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getUserInfo() {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			UserBean user = dao.find((Integer) request.getProperty("id"));
 			if (user == null) {
 				return Response.status(Status.NOT_FOUND).entity("Usuario no encontrado").build();
@@ -96,7 +97,7 @@ public class UsersResource {
 	@RolesAllowed(Roles.ADMIN_ROLE)
 	public Response getUsers() {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			return Response.status(Status.OK).entity(dao.select()).build();
 		} catch (Exception e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -109,7 +110,7 @@ public class UsersResource {
 	@Path("return/{id}")
 	public Response returnAccount(@PathParam("id") Integer id) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			UserBean user = dao.find(id);
 			if (user == null) {
 				throw new Exception("User not Found");
@@ -125,10 +126,10 @@ public class UsersResource {
 	@POST
 	@Secured
 	@RolesAllowed(Roles.ADMIN_ROLE)
-	@Path("impersonate/{id}") // impersonator
+	@Path("impersonate/{id}")
 	public Response changeProfile(@PathParam("id") Integer id) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			UserBean user = dao.find(id);
 			if (user == null) {
 				throw new Exception("User not Found");
@@ -145,7 +146,7 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response checkUsername(UserBean user) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			if (dao.select(user).size() > 0) {
 				return Response.status(Status.CONFLICT).entity("Nombre de Usuario ya registrado").build();
 			} else {
@@ -163,7 +164,7 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response checkPassword(UserBean user) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			if (dao.valid(user)) {
 				return Response.status(Status.OK).build();
 			}
@@ -180,7 +181,7 @@ public class UsersResource {
 	public Response updateUser(UserBean user) {
 		try {
 			user.setUserId((Integer) request.getProperty("id"));
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.update(user);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
@@ -195,7 +196,7 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateUserId(@PathParam("id") Integer id, UserBean user) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.update(user);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
@@ -216,7 +217,7 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteUserId(@PathParam("id") Integer id) {
 		try {
-			Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.delete(id);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
@@ -226,9 +227,8 @@ public class UsersResource {
 		}
 	}
 
-
 	private UserBean authenticate(UserBean user) throws Exception {
-		Dao<UserBean, UserBean> dao = DaoFactory.getDao("Users", "ar.edu.ubp.das");
+		Dao<UserBean, UserBean> dao = this.getDao();
 		UserBean userFound = dao.find(user);
 		System.out.println(userFound);
 		if (userFound != null)
@@ -255,5 +255,9 @@ public class UsersResource {
 				.claim("role", user.getRole())
 				.claim("impersonator", impersonator)
 				.signWith(SecurityFilter.KEY).compact();
+	}
+	
+	private Dao<UserBean, UserBean> getDao() throws SQLException {
+		return DaoFactory.getDao("Users", "ar.edu.ubp.das");
 	}
 }
