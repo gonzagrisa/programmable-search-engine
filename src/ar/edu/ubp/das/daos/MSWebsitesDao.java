@@ -13,6 +13,7 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	@Override
 	public WebsiteBean make(ResultSet result) throws SQLException {
 		WebsiteBean web = new WebsiteBean();
+		web.setWebsiteId(result.getInt("website_id"));
 		web.setUserId(result.getInt("user_id"));
 		web.setUrl(result.getString("url"));
 		web.setIsActive(result.getBoolean("isActive"));
@@ -34,6 +35,21 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 	
 	@Override
+	public void update(WebsiteBean website) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.update_website(?,?)");
+			this.setParameter(1, website.getWebsiteId());
+			this.setParameter(2, website.getUrl());
+			if (this.executeUpdate() == 0) {
+				throw new SQLException("Error al actualizar");
+			}
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
 	public void insert(WebsiteBean web) throws SQLException {
 		try {
 			this.connect();
@@ -48,23 +64,39 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 
 	@Override
-	public void delete(WebsiteBean website) throws SQLException {
+	public void delete(Integer websiteId) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.delete_website(?,?)");
-			this.setParameter(1, website.getUserId());
-			this.setParameter(2, website.getUrl());
-			this.executeUpdate();
+			this.setProcedure("dbo.delete_website(?)");
+			this.setParameter(1, websiteId);
+			if (this.executeUpdate() != 1) {
+				throw new SQLException("Error al realizar la operacion");
+			}
 		} finally {
 			this.close();
 		}
-		
 	}
-
+	
 	@Override
-	public void delete(Integer arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		
+	public List<WebsiteBean> select(WebsiteBean website) throws SQLException {
+		try {
+			this.connect();
+			if (website.getWebsiteId() == null) {
+				this.setProcedure("dbo.check_domain(?,?)");				
+			} else {
+				this.setProcedure("dbo.check_domain(?,?,?)");
+				this.setParameter(3, website.getWebsiteId());
+			}
+			this.setParameter(1, website.getUserId());
+			this.setParameter(2, website.getUrl());
+			return this.executeQuery();
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
+	public void delete(WebsiteBean website) throws SQLException {
 	}
 	
 	@Override
@@ -73,9 +105,20 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 
 	@Override
-	public WebsiteBean find(Integer arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public WebsiteBean find(Integer websiteId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.find_website(?)");
+			this.setParameter(1, websiteId);
+			List<WebsiteBean> websites = this.executeQuery();
+			if (websites.size() == 0) {
+				return null;
+			} else {
+				return websites.get(0);				
+			}
+		} finally {
+			this.close();
+		}
 	}
 
 	@Override
@@ -90,42 +133,18 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 
 	@Override
-	public List<WebsiteBean> select(WebsiteBean website) throws SQLException {
-		try {
-			this.connect();
-			this.setProcedure("dbo.check_domain(?,?)");
-			this.setParameter(1, website.getUserId());
-			this.setParameter(2, website.getUrl());
-			return this.executeQuery();
-		} finally {
-			this.close();
-		}
-		
-	}
-
-	@Override
-	public void update(WebsiteBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public boolean valid(WebsiteBean arg0) throws SQLException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	
-
 	@Override
 	public void insert(WebsiteBean arg0, Integer arg1) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub		
 	}
 
 	@Override
 	public void update(WebsiteBean arg0, Integer arg1) throws SQLException {
 		// TODO Auto-generated method stub
-		
 	}
 }
