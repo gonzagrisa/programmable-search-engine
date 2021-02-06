@@ -35,6 +35,20 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 	
 	@Override
+	public void update(Integer id) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.reindex(?)");
+			this.setParameter(1, id);
+			if (this.executeUpdate() == 0) {
+				throw new SQLException();
+			}
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
 	public void update(WebsiteBean website) throws SQLException {
 		try {
 			this.connect();

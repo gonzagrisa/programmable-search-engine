@@ -124,6 +124,20 @@ AS BEGIN
 END
 go
 
+-------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA A REINDEXAR --------------------------
+CREATE OR ALTER PROCEDURE dbo.reindex
+(
+	@website_id	INT
+)
+AS
+BEGIN
+	update dbo.websites
+		set reindex = 1,
+			indexed = 0
+	where website_id = @website_id
+END
+GO
+
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.update_website
 (

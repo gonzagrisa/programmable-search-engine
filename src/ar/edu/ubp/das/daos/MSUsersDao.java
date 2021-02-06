@@ -94,7 +94,12 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setProcedure("dbo.validate_user(?,?)");
 			this.setParameter(1, user.getUsername());
 			this.setParameter(2, user.getPassword());
-			return this.executeQuery().get(0);
+			List<UserBean> result = this.executeQuery();
+			if (result.size() == 0) {
+				return null;
+			} else {
+				return result.get(0);
+			}
 		} finally {
 			this.close();
 		}
@@ -173,6 +178,12 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 	public void update(UserBean arg0, Integer arg1) throws SQLException {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void update(Integer arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

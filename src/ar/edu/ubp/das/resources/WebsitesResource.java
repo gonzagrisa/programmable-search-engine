@@ -9,6 +9,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
@@ -63,6 +64,21 @@ public class WebsitesResource {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+	
+	
+	@PUT
+	@Path("{id}/reindex")
+	@Secured
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response reindexWebsite(@PathParam("id") Integer websiteId) {
+		try {
+			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
+			dao.update(websiteId);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 

@@ -122,7 +122,6 @@ public class UsersResource {
 		}
 	}
 	
-	
 	@POST
 	@Secured
 	@RolesAllowed(Roles.ADMIN_ROLE)
@@ -230,11 +229,10 @@ public class UsersResource {
 	private UserBean authenticate(UserBean user) throws Exception {
 		Dao<UserBean, UserBean> dao = this.getDao();
 		UserBean userFound = dao.find(user);
-		System.out.println(userFound);
 		if (userFound != null)
 			return userFound;
 		else {
-			throw new Exception();
+			throw new Exception("Nombre de usuario o Contraseña incorrectos");
 		}
 	}
 	

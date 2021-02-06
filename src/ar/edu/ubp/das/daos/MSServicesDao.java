@@ -126,5 +126,11 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		return false;
 	}
 
+	@Override
+	public void update(Integer arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }
