@@ -5,15 +5,16 @@ drop table dbo.websites
 -- ################## TABLA P�GINAS ##################
 CREATE TABLE dbo.websites
 (
+	website_id		INT				IDENTITY,
     user_id			INT				NOT NULL,
     url		       	VARCHAR(500)	NOT NULL,
     service_id		INT				NULL,
     isActive        BIT				NOT NULL DEFAULT 1,
 	indexed			BIT				NOT NULL DEFAULT 0,
 	reindex			BIT				NOT NULL DEFAULT 1,																							-- Agregar Campo Indexed (para el frontend)
-	constraint PK__websites__END primary key (user_id, url),																					-- Va a haber problemas cuando se haga el delete y despues se inserte de nuevo la misma url
+	constraint PK__websites__END primary key (website_id),																			-- Va a haber problemas cuando se haga el delete y despues se inserte de nuevo la misma url
 	constraint FK__websites__users__END foreign key (user_id) references dbo.users,
-    constraint FK__websites__services__END foreign key (user_id, service_id) references dbo.services (user_id, service_id) on delete cascade
+    constraint FK__websites__services__END foreign key (user_id, service_id) references dbo.services (user_id, service_id)
 );
 go
 
@@ -39,19 +40,14 @@ BEGIN
 END
 IF (@user_id IS NOT NULL)
 BEGIN
-	select user_id, url, isActive, reindex, indexed
+	select *
 		from dbo.websites w
 	where w.user_id = @user_id
+	AND   w.isActive = 1
 END
 END
-go
+GO
 
--- execute dbo.get_websites @user_id = 2
-
-update w
-	set reindex = 0
-	from dbo.websites w
-	where w.url = 'mercadolibre9.com'
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.new_website
 (
@@ -61,17 +57,35 @@ CREATE OR ALTER PROCEDURE dbo.new_website
 )
 as
 begin
+	-- activada, no se puede pisar
 	if exists(
 		SELECT 1 
 		from dbo.websites w
 		where w.user_id = @user_id
 		AND dbo.get_domain(w.url) = dbo.get_domain(@url)
+		AND w.isActive = 1
 	)
 	BEGIN
 		raiserror ('El dominio ya se encuentra registrado',16,1)
 		return
 	END
-	ELSE
+	-- eliminada, la volvemos a activar
+	if exists(
+		SELECT 1 
+		from dbo.websites w
+		where w.user_id = @user_id
+		AND dbo.get_domain(w.url) = dbo.get_domain(@url)
+		AND w.isActive = 0
+	)
+	BEGIN
+		update dbo.websites 
+			set isActive = 1,
+				reindex = 1,
+				indexed = 0
+		where user_id = @user_id and url = @url
+		return
+	END
+	-- si no existía, se inserta normalmente
 	BEGIN
 		insert into dbo.websites(user_id, url, service_id)
 		values(@user_id, @url, @service_id)
@@ -79,17 +93,18 @@ begin
 end
 go
 
-execute dbo.new_website 2, 'mercadolibre.com'
-execute dbo.new_website 2, 'mercadolibre2.com'
-execute dbo.new_website 2, 'mercadolibre3.com'
-execute dbo.new_website 2, 'mercadolibre4.com'
-execute dbo.new_website 2, 'mercadolibre5.com'
-execute dbo.new_website 2, 'mercadolibre6.com'
-execute dbo.new_website 2, 'mercadolibre7.com'
-execute dbo.new_website 2, 'mercadolibre8.com'
-execute dbo.new_website 2, 'mercadolibre9.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre1.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre2.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre3.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre4.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre5.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre6.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre7.com'
+		execute dbo.new_website 2, 'http://www.mercadolibre8.com'
+go
 --------------------------------------------------------------------------------------------------------------
-
+-------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
 RETURNS VARCHAR(500)
 AS BEGIN
@@ -109,47 +124,91 @@ AS BEGIN
 END
 go
 
-/*
-CREATE or ALTER FUNCTION dbo.valid_domain (@url VARCHAR(500))
-RETURNS BIT
-AS BEGIN
-	if (CHARINDEX('http://', @url) = 1
-		OR CHARINDEX('https://', @url) = 1
-		OR CHARINDEX('www.', @url) = 1
-		OR @url LIKE '[1-250].[0-250].[0-250].[0-250]'
-	)
-
-	begin
-		return 1
-	end
-	return 0
-END
-go
-*/
-
--------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
-create or alter procedure dbo.delete_website
+-------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
+CREATE OR ALTER PROCEDURE dbo.update_website
 (
-	@user_id	INT,
+	@website_id	INT,
 	@url		VARCHAR(500)
 )
-as
-begin
-	if exists(SELECT * from dbo.websites w where w.user_id = @user_id AND w.url = @url)
+AS
+BEGIN
+	update dbo.websites
+		set url = @url,
+			reindex = 1,
+			indexed = 0
+	where website_id = @website_id
+END
+GO
+select * from dbo.users
+
+-------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
+CREATE OR ALTER PROCEDURE dbo.delete_website
+(
+	@website_id	INT
+)
+AS
+BEGIN
+	if exists(SELECT * from dbo.websites w where w.website_id = @website_id)
 	BEGIN
-		delete from 
-			dbo.websites
-		where user_id = @user_id
-		AND url = @url
+		update w 
+			set isActive = 0
+		from dbo.websites w
+		where w.website_id = @website_id
 	END
 	ELSE
 	BEGIN
 		raiserror ('La operacion no se pudo realizar porque la pagina o el usuario no existen',16,1)
 	END
-end
-go
+END
+GO
+select * from dbo.websites
+-------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI DOMINIO EXISTE --------------------------
+CREATE OR ALTER PROCEDURE dbo.find_website
+(
+	@website_id	INT
+)
+AS
+BEGIN
+	select * from dbo.websites
+		where website_id = @website_id
+END
+GO
 
-execute dbo.delete_website 1, 'www.mercadolibre.com.ar/about'
+execute dbo.find_website 1
+
+-------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI DOMINIO YA ESTA REGISTRADO --------------------------
+CREATE OR ALTER PROCEDURE dbo.check_domain
+(
+	@user_id	INT,
+	@url		VARCHAR(500),
+	@website_id	INT = NULL
+)
+AS
+BEGIN
+	declare @domain varchar(500)
+	set @domain = dbo.get_domain(@url)
+
+	IF (@website_id IS NULL)
+	BEGIN
+		select * from dbo.websites w
+			where w.user_id = @user_id
+			AND dbo.get_domain(w.url) = @domain
+			AND w.isActive = 1
+	END
+	ELSE
+	BEGIN
+		select * from dbo.websites w
+			where w.user_id = @user_id
+			AND dbo.get_domain(w.url) = @domain
+			AND w.website_id != @website_id
+			AND w.isActive = 1
+	END
+END
+GO
+
+execute dbo.check_domain 2, 'http://www.mercadolibre.com'
+
+execute dbo.delete_website 2, 'mercadolibre9.com'
 
 select * from dbo.websites
 
