@@ -11,10 +11,10 @@ CREATE TABLE dbo.websites
     service_id		INT				NULL,
     isActive        BIT				NOT NULL DEFAULT 1,
 	indexed			BIT				NOT NULL DEFAULT 0,
-	reindex			BIT				NOT NULL DEFAULT 1,																							-- Agregar Campo Indexed (para el frontend)
-	constraint PK__websites__END primary key (website_id),																			-- Va a haber problemas cuando se haga el delete y despues se inserte de nuevo la misma url
+	reindex			BIT				NOT NULL DEFAULT 1,
+	constraint PK__websites__END primary key (website_id),
 	constraint FK__websites__users__END foreign key (user_id) references dbo.users,
-    constraint FK__websites__services__END foreign key (user_id, service_id) references dbo.services (user_id, service_id)
+    constraint FK__websites__services__END foreign key (service_id) references dbo.services (service_id)
 );
 go
 
@@ -123,7 +123,12 @@ AS BEGIN
 	return @domain
 END
 go
+select * from dbo.websites
 
+update dbo.websites
+	set reindex = 0,
+		indexed = 1
+	where website_id = 3
 -------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA A REINDEXAR --------------------------
 CREATE OR ALTER PROCEDURE dbo.reindex
 (
