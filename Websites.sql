@@ -18,12 +18,11 @@ CREATE TABLE dbo.websites
 );
 go
 
-
--- execute dbo.get_websites 1
+-- exec dbo.get_websites
 -- select * from dbo.websites
 
-insert into dbo.websites(user_id, url)
-values	(1, 'https://www.youtube.com')
+insert into dbo.websites(user_id, url, reindex, isActive)
+values	(1, 'https://www.infobae.com/', 1, 1)
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO SELECCIONAR PÁGINAS POR USUARIO --------------------------
@@ -48,6 +47,11 @@ END
 END
 GO
 
+update w
+	set reindex = 0
+	from dbo.websites w
+	where w.url = 'mercadolibre9.com'
+go
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.new_website
 (
@@ -59,7 +63,7 @@ as
 begin
 	-- activada, no se puede pisar
 	if exists(
-		SELECT 1 
+		SELECT 1
 		from dbo.websites w
 		where w.user_id = @user_id
 		AND dbo.get_domain(w.url) = dbo.get_domain(@url)
@@ -71,37 +75,33 @@ begin
 	END
 	-- eliminada, la volvemos a activar
 	if exists(
-		SELECT 1 
+		SELECT 1
 		from dbo.websites w
 		where w.user_id = @user_id
 		AND dbo.get_domain(w.url) = dbo.get_domain(@url)
 		AND w.isActive = 0
 	)
 	BEGIN
-		update dbo.websites 
-			set isActive = 1,
-				reindex = 1,
-				indexed = 0
-		where user_id = @user_id and url = @url
+		update dbo.websites set isActive = 1 where user_id = @user_id and url = @url
 		return
 	END
 	-- si no existía, se inserta normalmente
 	BEGIN
 		insert into dbo.websites(user_id, url, service_id)
 		values(@user_id, @url, @service_id)
-	END	
+	END
 end
 go
 
-		execute dbo.new_website 2, 'http://www.mercadolibre.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre1.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre2.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre3.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre4.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre5.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre6.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre7.com'
-		execute dbo.new_website 2, 'http://www.mercadolibre8.com'
+execute dbo.new_website 2, 'mercadolibre.com'
+execute dbo.new_website 2, 'mercadolibre2.com'
+execute dbo.new_website 2, 'mercadolibre3.com'
+execute dbo.new_website 2, 'mercadolibre4.com'
+execute dbo.new_website 2, 'mercadolibre5.com'
+execute dbo.new_website 2, 'mercadolibre6.com'
+execute dbo.new_website 2, 'mercadolibre7.com'
+execute dbo.new_website 2, 'mercadolibre8.com'
+execute dbo.new_website 2, 'mercadolibre9.com'
 go
 --------------------------------------------------------------------------------------------------------------
 -------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
@@ -109,7 +109,7 @@ CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
 RETURNS VARCHAR(500)
 AS BEGIN
     DECLARE @domain varchar(500)
-	SET @domain = 
+	SET @domain =
 		/* Get just the host name from a URL */
 		SUBSTRING(@url,
 			/* Starting Position (After any '//') */
@@ -164,7 +164,7 @@ AS
 BEGIN
 	if exists(SELECT * from dbo.websites w where w.website_id = @website_id)
 	BEGIN
-		update w 
+		update w
 			set isActive = 0
 		from dbo.websites w
 		where w.website_id = @website_id
