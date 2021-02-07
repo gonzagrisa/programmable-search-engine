@@ -118,7 +118,6 @@ public class MSPreferencesDao extends Dao<PreferencesBean, PreferencesBean>{
 	@Override
 	public void update(Integer arg0) throws SQLException {
 		// TODO Auto-generated method stub
-		
 	}
 	
 }

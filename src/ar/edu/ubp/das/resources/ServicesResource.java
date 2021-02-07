@@ -34,7 +34,7 @@ public class ServicesResource {
 
 	private static final String PROTOCOL_REST = "REST";
 	private static final String PROTOCOL_SOAP = "SOAP";
-	
+
 	private static final HttpClient MyHttpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(5))
@@ -69,7 +69,7 @@ public class ServicesResource {
 		try {
 			this.checkBody(service);
 			this.checkPingEndpoint(service.getURLPing(), service.getProtocol());
-			
+
 			Dao<ServiceBean, Integer> dao = this.getDao();
 			dao.insert(service);
 			return Response.status(Status.NO_CONTENT).build();
@@ -97,7 +97,7 @@ public class ServicesResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@DELETE
 	@Path("{serviceId}")
 	@Secured
@@ -132,13 +132,8 @@ public class ServicesResource {
 				HttpRequest request = HttpRequest.newBuilder()
 						.GET()
 						.uri(URI.create(endpoint))
-						.build();	
-				HttpResponse<String> response = null;
-				
-				response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
-				if (response.statusCode() == 200) {
-					System.out.println("Service OK");
-				}
+						.build();
+				HttpResponse<String> response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() >= 400) {
 					throw new Exception();
 				}
@@ -153,11 +148,11 @@ public class ServicesResource {
 				System.out.println("RESPUESTA SOAP:");
 				System.out.println(res[0]);
 				System.out.println("Service OK");
-				client.close();
+
 			}
 		} catch (Exception e) {
 			// Genezamos todas las excepciones que puedan saltar en una sola
-			throw new Exception(e.getMessage());
+			throw new Exception("El servicio no responde.");
 		}
 	}
 
@@ -167,7 +162,7 @@ public class ServicesResource {
 
 	private void checkBody(ServiceBean service) throws Exception {
 		if (service == null || !service.isValid()) {
-			throw new Exception("Información requerida faltante");
+			throw new Exception("Informaciï¿½n requerida faltante");
 		}
 	}
 }

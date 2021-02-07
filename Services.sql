@@ -90,11 +90,12 @@ go
 
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
-CREATE or ALTER PROCEDURE dbo.update_service
-    @service_id		INT,
+CREATE or ALTER PROCEDURE dbo.update_service (
+    @id				INT,
 	@url_resource	VARCHAR(500),
     @url_ping		VARCHAR(500),
 	@protocol		VARCHAR(4)
+)
 AS
 BEGIN
     update s
@@ -107,26 +108,35 @@ BEGIN
 	where s.service_id = @service_id
 END
 GO
-execute dbo.get_services 2
-execute dbo.update_service 1, 'apimercadolibre.com', 'asdasdasdasd', 'SOAP' 
--------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
-CREATE or ALTER PROCEDURE dbo.delete_service
-    @service_id		INT
+-------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS --------------------------
+CREATE or ALTER PROCEDURE dbo.get_services
 AS
 BEGIN
-    update s
-	set isActive = 0
-	from dbo.services s
-	where s.service_id = @service_id
+    select user_id, service_id, url_resource, url_ping, protocol
+	from dbo.services
+	where reindex = 1
+		 and isUp = 1
+	 and isActive = 1
 END
 GO
+exec dbo.get_services
 
--------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
--------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
+select * from dbo.services
 
-
-
-
+update dbo.services set isUp = 1
+go
+-------------------------- PROCEDIMIENTO ALMACENADO PARA REGISTRAR UN SERVICIO COMO CAÍDO --------------------------
+CREATE or ALTER PROCEDURE dbo.set_service_down (
+	@service_id int
+)
+AS
+BEGIN
+    update dbo.services
+	set isUp = 0
+	where service_id = @service_id
+END
+GO
+-- exec dbo.set_service_down
 --------------------------------------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
