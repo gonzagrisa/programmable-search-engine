@@ -3,6 +3,7 @@ use users
 drop table dbo.services
 
 -- ################## TABLA SERVICIOS ##################
+/*
 CREATE TABLE dbo.services
 (
     user_id			INT				NOT NULL,
@@ -10,17 +11,39 @@ CREATE TABLE dbo.services
     url_resource	VARCHAR(500)	NOT NULL,
 	url_ping		VARCHAR(500)	NOT NULL,
 	protocol        VARCHAR(4)    	NOT NULL,
-	reindex			TINYINT			NOT NULL default 1,
-	isActive		TINYINT			NOT NULL default 1,
-	isUp			TINYINT			NOT NULL default 1,
+	reindex			BIT				NOT NULL default 1,
+	indexed			BIT				NOT NULL default 0,
+	isActive		BIT				NOT NULL default 1,
+	isUp			BIT				NOT NULL default 1,
 	constraint PK__services__END primary key (user_id, service_id),
 	constraint PK__services__UK_service_id__END UNIQUE (service_id),
 	constraint PK__services__UK_url_resource__END UNIQUE (url_resource),
 	constraint PK__services__valid_protocol__END CHECK (protocol in ('REST', 'SOAP')),
-	constraint FK__services__users__END foreign key (user_id) references dbo.users on delete cascade
+	constraint FK__services__users__END foreign key (user_id) references dbo.users
+);
+go
+*/
+
+
+CREATE TABLE dbo.services
+(
+    service_id		INT				NOT NULL IDENTITY,
+    user_id			INT				NOT NULL,
+    url_resource	VARCHAR(500)	NOT NULL,
+	url_ping		VARCHAR(500)	NOT NULL,
+	protocol        VARCHAR(4)    	NOT NULL,
+	reindex			BIT				NOT NULL default 1,
+	indexed			BIT				NOT NULL default 0,
+	isActive		BIT				NOT NULL default 1,
+	isUp			BIT				NOT NULL default 1,
+	constraint PK__services__END primary key (service_id),
+	constraint UK__services__UK_url_resource__END UNIQUE (user_id, url_resource),
+	constraint CK__services__valid_protocol__END CHECK (protocol in ('REST', 'SOAP')),
+	constraint FK__services__users__END foreign key (user_id) references dbo.users
 );
 go
 
+execute dbo.get_services 2
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
@@ -34,24 +57,41 @@ go
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
 
--------------------------- PROCEDIMIENTO ALMACENADO REGISTRAR UN NUEVO SERVICIO --------------------------
-create or alter procedure dbo.insert_service
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.get_services
+(
+	@user_id		INT
+)
+AS
+BEGIN
+	select * from dbo.services s
+		WHERE s.user_id = @user_id
+		AND s.isActive = 1
+END
+GO
+
+-------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.insert_service
 (
 	@user_id		INT,
 	@url_resource	VARCHAR(500),
 	@url_ping		VARCHAR(500),
 	@protocol       VARCHAR(4)
 )
-as
-begin
+AS
+BEGIN
 	insert into dbo.services(user_id, url_resource, url_ping, protocol)
 	values	(@user_id, @url_resource, @url_ping, @protocol)
-end
+END
+GO
+
+execute dbo.insert_service 3, 'https://api.mercadolibre.com/products', 'https://api.mercadolibre.com/ping', 'REST'
 go
+
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_service
-    @id				INT,
+    @service_id		INT,
 	@url_resource	VARCHAR(500),
     @url_ping		VARCHAR(500),
 	@protocol		VARCHAR(4)
@@ -61,11 +101,32 @@ BEGIN
 	set url_resource = @url_resource,
 		url_ping = @url_ping,
 		protocol = @protocol,
-		reindex = 1
+		reindex = 1,
+		indexed = 0
 	from dbo.services s
-	where s.user_id = @id and s.url_resource = @url_resource
+	where s.service_id = @service_id
 END
 GO
+execute dbo.get_services 2
+execute dbo.update_service 1, 'apimercadolibre.com', 'asdasdasdasd', 'SOAP' 
+-------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
+CREATE or ALTER PROCEDURE dbo.delete_service
+    @service_id		INT
+AS
+BEGIN
+    update s
+	set isActive = 0
+	from dbo.services s
+	where s.service_id = @service_id
+END
+GO
+
+-------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
+-------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR UN SERVICIO --------------------------
+
+
+
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services

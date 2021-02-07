@@ -12,11 +12,14 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	@Override
 	public ServiceBean make(ResultSet result) throws SQLException {
 		ServiceBean service = new ServiceBean();
-		service.setUserId(result.getInt("user_id"));
 		service.setServiceId(result.getInt("service_id"));
+		service.setUserId(result.getInt("user_id"));
 		service.setURLResource(result.getString("url_resource"));
 		service.setURLPing(result.getString("url_ping"));
-		service.setReindex(result.getInt("reindex") == 1 ? true : false);
+		service.setProtocol(result.getString("protocol"));
+		service.setReindex(result.getBoolean("reindex"));
+		service.setIndexed(result.getBoolean("indexed"));
+		service.setIsUp(result.getBoolean("isUp"));
 		return service;
 	}
 	
@@ -46,7 +49,7 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		try {
 			this.connect();
 			this.setProcedure("dbo.update_service(?,?,?,?)");
-			this.setParameter(1, service.getUserId());
+			this.setParameter(1, service.getServiceId());
 			this.setParameter(2, service.getURLResource());
 			this.setParameter(3, service.getURLPing());
 			this.setParameter(4, service.getProtocol());
@@ -61,9 +64,17 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	}
 
 	@Override
-	public void delete(Integer arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		
+	public void delete(Integer id) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.delete_service(?)");
+			this.setParameter(1, id);
+			if (this.executeUpdate() == 0) {
+				throw new SQLException();
+			}
+		} finally {
+			this.close();
+		}
 	}
 
 	@Override
@@ -103,9 +114,15 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	}
 
 	@Override
-	public List<ServiceBean> select(Integer arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public List<ServiceBean> select(Integer userId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.get_services(?)");
+			this.setParameter(1, userId);
+			return this.executeQuery();
+		} finally {
+			this.close();
+		}
 	}
 
 	@Override

@@ -6,12 +6,15 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -46,10 +49,17 @@ public class ServicesResource {
 		return Response.status(Status.OK).entity("pong").build();
 	}
 
-//	@GET
-//	public Response getServices() {
-//		return Response.ok().build();
-//	}
+	@GET
+	@Secured
+	public Response getServices() {
+		try {
+			Dao<ServiceBean, Integer> dao = this.getDao();
+			List<ServiceBean> services = dao.select((Integer) req.getProperty("id"));
+			return Response.status(Status.OK).entity(services).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
 
 	@POST
 	@Secured
@@ -69,19 +79,37 @@ public class ServicesResource {
 	}
 
 	@PUT
+	@Path("{serviceId}")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response update(ServiceBean service) {
-		service.setUserId((Integer) req.getProperty("id"));
+	public Response update(@PathParam("serviceId") Integer id, ServiceBean service) {
+		// TODO: ver que hacer con las paginas que salieron del servicio
 		try {
 			this.checkBody(service);
+			service.setUserId((Integer) req.getProperty("id"));
 			this.checkPingEndpoint(service.getURLPing(), service.getProtocol());
-			
 			Dao<ServiceBean, Integer> dao = this.getDao();
+			service.setServiceId(id);
+			System.out.println(service);
 			dao.update(service);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+	
+	@DELETE
+	@Path("{serviceId}")
+	@Secured
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response delete(@PathParam("serviceId") Integer id) {
+		// TODO: ver que hacer con las paginas que salieron del servicio
+		try {
+			Dao<ServiceBean, Integer> dao = this.getDao();
+			dao.delete(id);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 
@@ -92,24 +120,30 @@ public class ServicesResource {
 				HttpRequest request = HttpRequest.newBuilder()
 						.GET()
 						.uri(URI.create(endpoint))
-						.build();
+						.build();	
 				HttpResponse<String> response = null;
+				
 				response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
+				if (response.statusCode() == 200) {
+					System.out.println("Service OK");
+				}
 				if (response.statusCode() >= 400) {
 					throw new Exception();
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
-				// FIXME: A partir de esta línea no pasa nada
-				Client client = jdcf.createClient(endpoint);
-				Object res[] = client.invoke("ping");
-				client.close();
+				// FIXME: A partir de esta linea no pasa nada
+				//Client client = jdcf.createClient(endpoint);
+				Client client = jdcf.createClient("http://www.learnwebservices.com/services/hello?WSDL");
+				//Object res[] = client.invoke("SayHello");
 				System.out.println("RESPUESTA SOAP:");
-				System.out.println(res[0]);		
+				//System.out.println(res);
+				System.out.println("Service OK");
+				client.close();
 			}
 		} catch (Exception e) {
 			// Genezamos todas las excepciones que puedan saltar en una sola
-			throw new Exception("Error al impactar el endpoint de ping del servicio");
+			throw new Exception(e.getMessage());
 		}
 	}
 
@@ -118,8 +152,8 @@ public class ServicesResource {
 	}
 
 	private void checkBody(ServiceBean service) throws Exception {
-		if (service == null ||!service.isValid()) {
-			throw new Exception("Debe enviar la información requerida del servicio");
+		if (service == null || !service.isValid()) {
+			throw new Exception("Informaci�n requerida faltante");
 		}
 	}
 }
