@@ -112,6 +112,18 @@ public class ServicesResource {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
+	
+	@POST
+	@Path("test")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response testPing(ServiceBean service) {
+		try {
+			checkPingEndpoint(service.getURLPing(), service.getProtocol());
+			return Response.status(Status.OK).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 
 	private void checkPingEndpoint(String endpoint, String protocol) throws Exception {
 		try {
@@ -131,13 +143,15 @@ public class ServicesResource {
 					throw new Exception();
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
+				if (!endpoint.toLowerCase().contains("?wsdl")){
+					throw new Exception("El servicio no es un Servicio Web (SOAP)");
+				}
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
-				// FIXME: A partir de esta linea no pasa nada
-				//Client client = jdcf.createClient(endpoint);
-				Client client = jdcf.createClient("http://www.learnwebservices.com/services/hello?WSDL");
-				//Object res[] = client.invoke("SayHello");
+				Client client = jdcf.createClient(endpoint);
+				Object res[] = client.invoke("ping");
+				client.close();
 				System.out.println("RESPUESTA SOAP:");
-				//System.out.println(res);
+				System.out.println(res[0]);
 				System.out.println("Service OK");
 				client.close();
 			}
