@@ -41,7 +41,7 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 			this.setProcedure("dbo.reindex(?)");
 			this.setParameter(1, id);
 			if (this.executeUpdate() == 0) {
-				throw new SQLException();
+				throw new SQLException("La página a actualizar no existe");
 			}
 		} finally {
 			this.close();
