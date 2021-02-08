@@ -43,7 +43,7 @@ CREATE TABLE dbo.services
 );
 go
 
-execute dbo.get_services 2
+execute dbo.get_services  2
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
@@ -105,11 +105,11 @@ BEGIN
 		reindex = 1,
 		indexed = 0
 	from dbo.services s
-	where s.service_id = @service_id
+	where s.service_id = @id
 END
 GO
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS --------------------------
-CREATE or ALTER PROCEDURE dbo.get_services
+CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
 BEGIN
     select user_id, service_id, url_resource, url_ping, protocol
@@ -119,7 +119,7 @@ BEGIN
 	 and isActive = 1
 END
 GO
-exec dbo.get_services
+exec dbo.get_services_to_crawl
 
 select * from dbo.services
 
