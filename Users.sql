@@ -47,7 +47,6 @@ begin
 	select * from dbo.users u
 	where u.role = 'USER'
 	and u.status = 1
-	
 end
 go
 

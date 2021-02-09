@@ -53,8 +53,7 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 			this.setParameter(2, service.getURLResource());
 			this.setParameter(3, service.getURLPing());
 			this.setParameter(4, service.getProtocol());
-			int affectedRows = this.executeUpdate();
-			if (affectedRows == 0) {
+			if (this.executeUpdate() == 0) {
 				throw new SQLException("El servicio a actualizar no existe");
 			}
 		} catch (SQLException e) {

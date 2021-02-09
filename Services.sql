@@ -113,7 +113,7 @@ BEGIN
 END
 GO
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS --------------------------
-CREATE or ALTER PROCEDURE dbo.get_services
+CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
 BEGIN
     select user_id, service_id, url_resource, url_ping, protocol
@@ -123,8 +123,7 @@ BEGIN
 	 and isActive = 1
 END
 GO
-
-exec dbo.get_services
+exec dbo.get_services_to_crawl
 
 select * from dbo.services
 

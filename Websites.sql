@@ -21,6 +21,8 @@ go
 -- exec dbo.get_websites
 -- select * from dbo.websites
 
+update websites set service_id = NULL where website_id = 34;
+
 insert into dbo.websites(user_id, url, reindex, isActive)
 values	(1, 'https://www.infobae.com/', 1, 1)
 go
@@ -30,20 +32,20 @@ go
 CREATE OR ALTER PROCEDURE dbo.get_websites (@user_id int = NULL)
 AS
 BEGIN
-IF (@user_id IS NULL)
-BEGIN
-	select user_id, string_agg(url, ',') as websites
-	from dbo.websites
-	where reindex = 1 and isActive = 1
-	group by user_id
-END
-IF (@user_id IS NOT NULL)
-BEGIN
-	select *
-		from dbo.websites w
-	where w.user_id = @user_id
-	AND   w.isActive = 1
-END
+	IF (@user_id IS NULL)
+	BEGIN
+		select user_id, string_agg(url, ',') as websites
+		from dbo.websites
+		where reindex = 1 and isActive = 1
+		group by user_id
+	END
+	IF (@user_id IS NOT NULL)
+	BEGIN
+		select *
+			from dbo.websites w
+		where w.user_id = @user_id
+		AND   w.isActive = 1
+	END
 END
 GO
 
@@ -56,8 +58,7 @@ go
 CREATE OR ALTER PROCEDURE dbo.new_website
 (
 	@user_id	INT,
-	@url		VARCHAR(500),
-	@service_id INT = NULL
+	@url		VARCHAR(500)
 )
 as
 begin
@@ -87,8 +88,8 @@ begin
 	END
 	-- si no existía, se inserta normalmente
 	BEGIN
-		insert into dbo.websites(user_id, url, service_id)
-		values(@user_id, @url, @service_id)
+		insert into dbo.websites(user_id, url)
+		values(@user_id, @url)
 	END
 end
 go
@@ -103,6 +104,86 @@ execute dbo.new_website 2, 'mercadolibre7.com'
 execute dbo.new_website 2, 'mercadolibre8.com'
 execute dbo.new_website 2, 'mercadolibre9.com'
 go
+
+-------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
+
+CREATE OR ALTER PROCEDURE dbo.clean_service_pages
+(
+	@service_id INT,
+	@user_id 	INT
+)
+as
+begin
+	delete
+	from dbo.websites
+	where service_id = @service_id
+	and user_id = @user_id
+end
+go
+
+-------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA DESDE UN SERVICIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.new_website_from_service
+(
+	@user_id	INT,
+	@url		VARCHAR(500),
+	@service_id INT
+)
+as
+begin
+	-- si existe una página igual se actualiza
+	if exists(
+		SELECT 1
+		from dbo.websites
+		where user_id = @user_id
+		AND dbo.get_domain(url) = dbo.get_domain(@url)
+	)
+	BEGIN
+		update dbo.websites
+		set reindex = 1,
+		indexed = 0,
+		isActive = 1,
+		service_id = @service_id
+		return
+	END
+	-- si no existía se inserta normalmente
+	insert into dbo.websites(user_id, url, service_id)
+	values	(@user_id, @url, @service_id)
+end
+go
+
+insert into dbo.websites (user_id, url, service_id)
+		values	(12, 'aaa.com', 1)
+
+insert into dbo.websites (user_id, url, service_id)
+		values	(1, 'aaa.com', NULL),
+				(1, 'bbb.net', 12),
+				(1, 'ccc.com', 12),
+				(1, 'ddd.com', 12),
+				(1, 'eee.com', 13),
+				(1, 'fff.com', 13),
+				(1, 'ggg.com', 13),
+				(1, 'hhh.com', 14),
+				(1, 'iii.com', 14),
+				(1, 'jjj.com', 14),
+				(1, 'kkk.com', NULL),
+				(1, 'lll.com', NULL),
+				(12, 'aaa.com', NULL),
+				(12, 'bbb.net', 12),
+				(12, 'ccc.com', 12),
+				(12, 'ddd.com', 12),
+				(12, 'eee.com', 13),
+				(12, 'fff.com', 13)
+go
+
+exec dbo.new_website_from_service @user_id = 1, @url = 'bbb.com', @service_id = 12;
+
+exec dbo.new_website_from_service @user_id = 1, @url = 'aaa.com', @service_id = 12;
+
+exec dbo.new_website_from_service @user_id = 1, @url = 'kkk.com', @service_id = 12;
+
+-- select * from dbo.websites;
+
+
 --------------------------------------------------------------------------------------------------------------
 -------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
@@ -129,6 +210,7 @@ update dbo.websites
 	set reindex = 0,
 		indexed = 1
 	where website_id = 3
+go
 -------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA A REINDEXAR --------------------------
 CREATE OR ALTER PROCEDURE dbo.reindex
 (
@@ -158,7 +240,6 @@ BEGIN
 	where website_id = @website_id
 END
 GO
-select * from dbo.users
 
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.delete_website
@@ -180,7 +261,6 @@ BEGIN
 	END
 END
 GO
-select * from dbo.websites
 -------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI DOMINIO EXISTE --------------------------
 CREATE OR ALTER PROCEDURE dbo.find_website
 (
@@ -193,7 +273,7 @@ BEGIN
 END
 GO
 
-execute dbo.find_website 1
+-- exec dbo.find_website 1
 
 -------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI DOMINIO YA ESTA REGISTRADO --------------------------
 CREATE OR ALTER PROCEDURE dbo.check_domain
@@ -225,9 +305,9 @@ BEGIN
 END
 GO
 
-execute dbo.check_domain 2, 'http://www.mercadolibre.com'
+-- exec dbo.check_domain 2, 'http://www.mercadolibre.com'
 
-execute dbo.delete_website 2, 'mercadolibre9.com'
+-- exec dbo.delete_website 2, 'mercadolibre9.com'
 
 select * from dbo.websites
 

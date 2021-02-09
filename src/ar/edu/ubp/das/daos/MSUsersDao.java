@@ -63,8 +63,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setParameter(3, user.getLastName());
 			this.setParameter(4, user.getUsername());
 			this.setParameter(5, user.getPassword());
-			int affectedRows = this.executeUpdate();
-			if (affectedRows == 0) {
+			if (this.executeUpdate() == 0) {
 				throw new SQLException("El usuario a actualizar no existe");
 			}
 		} finally {
