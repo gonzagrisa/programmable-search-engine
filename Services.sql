@@ -24,7 +24,6 @@ CREATE TABLE dbo.services
 go
 */
 
-
 CREATE TABLE dbo.services
 (
     service_id		INT				NOT NULL IDENTITY,
@@ -44,6 +43,11 @@ CREATE TABLE dbo.services
 go
 
 execute dbo.get_services 2
+
+update dbo.services
+	set indexed = 1,
+		reindex = 0
+	where service_id = 12
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
@@ -58,7 +62,7 @@ go
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
-CREATE OR ALTER PROCEDURE dbo.get_services
+CREATE OR ALTER PROCEDURE dbo.get_services_user
 (
 	@user_id		INT
 )
@@ -105,7 +109,7 @@ BEGIN
 		reindex = 1,
 		indexed = 0
 	from dbo.services s
-	where s.service_id = @service_id
+	where s.service_id = @id
 END
 GO
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS --------------------------
@@ -119,6 +123,7 @@ BEGIN
 	 and isActive = 1
 END
 GO
+
 exec dbo.get_services
 
 select * from dbo.services
@@ -137,6 +142,7 @@ BEGIN
 END
 GO
 -- exec dbo.set_service_down
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
@@ -155,3 +161,26 @@ values	(1, 'youtube0.com/0','youtube0.com/ping', 'REST', 0),
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
+select * from dbo.users
+
+execute dbo.get_services_user 2
+
+select * from dbo.services
+-------------------------- PROCEDIMIENTO ALMACENADO PARA MARCAR SERVICIO A REINDEXAR --------------------------
+CREATE OR ALTER PROCEDURE dbo.reindex_service
+(
+	@service_id	INT
+)
+AS
+BEGIN
+	update dbo.services
+	set	reindex = 1,
+		indexed = 0
+	where service_id = @service_id
+END
+GO
+
+update dbo.services
+	set indexed = 1,
+		reindex = 0
+	where service_id = 12

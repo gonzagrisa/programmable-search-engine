@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -97,6 +98,20 @@ public class ServicesResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+	
+	@PUT
+	@Path("{serviceId}/reindex")
+	@Secured
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response reindexService(@PathParam("serviceId") Integer id) {
+		try {
+			Dao<ServiceBean, Integer> dao = this.getDao();
+			dao.update(id);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 
 	@DELETE
 	@Path("{serviceId}")
@@ -125,7 +140,7 @@ public class ServicesResource {
 		}
 	}
 
-	private void checkPingEndpoint(String endpoint, String protocol) throws Exception {
+	private void checkPingEndpoint(String endpoint, String protocol) throws Exception, BadRequestException {
 		try {
 			System.out.println("PROBANDO ENDPOINT " + endpoint + " (" + protocol + ")");
 			if (protocol.equals(PROTOCOL_REST)) {
@@ -139,7 +154,8 @@ public class ServicesResource {
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
 				if (!endpoint.toLowerCase().contains("?wsdl")){
-					throw new Exception("El servicio no es un Servicio Web (SOAP)");
+					System.out.println("not a wsdl service");
+					throw new BadRequestException("El servicio no es un Servicio Web (SOAP)");
 				}
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
 				Client client = jdcf.createClient(endpoint);
@@ -150,9 +166,11 @@ public class ServicesResource {
 				System.out.println("Service OK");
 
 			}
+		} catch (BadRequestException e) {
+			throw e;
 		} catch (Exception e) {
 			// Genezamos todas las excepciones que puedan saltar en una sola
-			throw new Exception("El servicio no responde.");
+			throw new Exception("El servicio no responde");
 		}
 	}
 

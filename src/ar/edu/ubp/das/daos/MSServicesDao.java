@@ -57,6 +57,8 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 			if (affectedRows == 0) {
 				throw new SQLException("El servicio a actualizar no existe");
 			}
+		} catch (SQLException e) {
+			throw e;
 		} finally {
 			this.close();
 		}		
@@ -117,7 +119,7 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	public List<ServiceBean> select(Integer userId) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.get_services(?)");
+			this.setProcedure("dbo.get_services_user(?)");
 			this.setParameter(1, userId);
 			return this.executeQuery();
 		} finally {
@@ -144,9 +146,17 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	}
 
 	@Override
-	public void update(Integer arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		
+	public void update(Integer serviceId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.reindex_service(?)");
+			this.setParameter(1, serviceId);
+			if (this.executeUpdate() == 0) {
+				throw new SQLException();
+			}
+		} finally {
+			this.close();
+		}
 	}
 
 
