@@ -3,26 +3,6 @@ use users
 drop table dbo.services
 
 -- ################## TABLA SERVICIOS ##################
-/*
-CREATE TABLE dbo.services
-(
-    user_id			INT				NOT NULL,
-    service_id		INT				NOT NULL IDENTITY,
-    url_resource	VARCHAR(500)	NOT NULL,
-	url_ping		VARCHAR(500)	NOT NULL,
-	protocol        VARCHAR(4)    	NOT NULL,
-	reindex			BIT				NOT NULL default 1,
-	indexed			BIT				NOT NULL default 0,
-	isActive		BIT				NOT NULL default 1,
-	isUp			BIT				NOT NULL default 1,
-	constraint PK__services__END primary key (user_id, service_id),
-	constraint PK__services__UK_service_id__END UNIQUE (service_id),
-	constraint PK__services__UK_url_resource__END UNIQUE (url_resource),
-	constraint PK__services__valid_protocol__END CHECK (protocol in ('REST', 'SOAP')),
-	constraint FK__services__users__END foreign key (user_id) references dbo.users
-);
-go
-*/
 
 CREATE TABLE dbo.services
 (
@@ -42,25 +22,13 @@ CREATE TABLE dbo.services
 );
 go
 
+-- Para obtener todos los procedimientos almacenados de la base de datos
 SELECT * 
   FROM users.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
 
-
-update dbo.services
-	set indexed = 1,
-		reindex = 0
-	where service_id = 12
 ----------------------------------------------------------------------------------------------------------------
-select user_id, string_agg(url_resource, ',')
-	from dbo.services
-	where reindex = 1
-	group by user_id
 
--- select * from dbo.services
-
--- delete from dbo.services
-go
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
 
@@ -97,9 +65,6 @@ BEGIN
 END
 GO
 
-execute dbo.insert_service 3, 'https://api.mercadolibre.com/aaaaaa', 'https://api.mercadolibre.com/ping', 'REST'
-go
-
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_service (
@@ -133,10 +98,6 @@ BEGIN
 END
 GO
 
-exec dbo.get_services_to_crawl
-
-update dbo.services set isUp = 1
-go
 -------------------------- PROCEDIMIENTO ALMACENADO PARA REGISTRAR UN SERVICIO COMO CAÍDO --------------------------
 CREATE or ALTER PROCEDURE dbo.set_service_down (
 	@service_id int
@@ -148,7 +109,6 @@ BEGIN
 	where service_id = @service_id
 END
 GO
--- exec dbo.set_service_down
 
 -------------------------- PROCEDIMIENTO ALMACENADO PARA MARCAR SERVICIO A REINDEXAR O NO REINDEXAR --------------------------
 CREATE OR ALTER PROCEDURE dbo.reindex_service
@@ -166,7 +126,7 @@ BEGIN
 			indexed = 0
 		where service_id = @service_id
 	END
-	-- if true, servicio a no reindexar
+	-- if false, servicio a no reindexar
 	IF (@reindex = 0)
 	BEGIN
 		update dbo.services
