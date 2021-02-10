@@ -48,9 +48,8 @@ select * from dbo.websites
 execute dbo.get_websites
 
 update w
-	set reindex = 0
+	set indexed = 0
 	from dbo.websites w
-	where w.url = 'mercadolibre9.com'
 go
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.new_website
