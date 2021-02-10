@@ -12,19 +12,11 @@ CREATE TABLE dbo.websites
     isActive        BIT				NOT NULL DEFAULT 1,
 	indexed			BIT				NOT NULL DEFAULT 0,
 	reindex			BIT				NOT NULL DEFAULT 1,
+	isUp			BIT				NOT NULL DEFAULT 1,
 	constraint PK__websites__END primary key (website_id),
 	constraint FK__websites__users__END foreign key (user_id) references dbo.users,
     constraint FK__websites__services__END foreign key (service_id) references dbo.services (service_id)
 );
-go
-
--- exec dbo.get_websites
--- select * from dbo.websites
-
-update websites set service_id = NULL where website_id = 34;
-
-insert into dbo.websites(user_id, url, reindex, isActive)
-values	(1, 'https://www.infobae.com/', 1, 1)
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO SELECCIONAR PÁGINAS POR USUARIO --------------------------
@@ -34,10 +26,11 @@ AS
 BEGIN
 	IF (@user_id IS NULL)
 	BEGIN
-		select user_id, string_agg(url, ',') as websites
-		from dbo.websites
-		where reindex = 1 and isActive = 1
-		group by user_id
+		--select user_id, string_agg(url, ',') as websites
+		select user_id, STRING_AGG(url, ',') as websites, STRING_AGG(website_id, ',') as websites_id
+			from dbo.websites
+			where reindex = 1 and isActive = 1
+			group by user_id
 	END
 	IF (@user_id IS NOT NULL)
 	BEGIN
@@ -48,6 +41,11 @@ BEGIN
 	END
 END
 GO
+
+select * from dbo.services
+
+select * from dbo.websites
+execute dbo.get_websites
 
 update w
 	set reindex = 0
@@ -83,7 +81,8 @@ begin
 		AND w.isActive = 0
 	)
 	BEGIN
-		update dbo.websites set isActive = 1 where user_id = @user_id and url = @url
+		update dbo.websites set isActive = 1, reindex = 1, indexed = 0, isUp = 1 
+			where user_id = @user_id and url = @url
 		return
 	END
 	-- si no existía, se inserta normalmente
@@ -91,22 +90,25 @@ begin
 		insert into dbo.websites(user_id, url)
 		values(@user_id, @url)
 	END
-end
-go
+END
+GO
 
-execute dbo.new_website 2, 'mercadolibre.com'
-execute dbo.new_website 2, 'mercadolibre2.com'
-execute dbo.new_website 2, 'mercadolibre3.com'
-execute dbo.new_website 2, 'mercadolibre4.com'
-execute dbo.new_website 2, 'mercadolibre5.com'
-execute dbo.new_website 2, 'mercadolibre6.com'
-execute dbo.new_website 2, 'mercadolibre7.com'
-execute dbo.new_website 2, 'mercadolibre8.com'
-execute dbo.new_website 2, 'mercadolibre9.com'
+select * from dbo.users where status = 1
+
+execute dbo.get_websites
+
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
+execute dbo.new_website 2, 'https://www.mercadolibre.com.ar'
+execute dbo.new_website 2, 'https://www.mercadolibre.com.br'
+execute dbo.new_website 2, 'https://www.mercadolibre.com.cl'
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
+execute dbo.new_website 2, 'https://www.mercadolibre.com'
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
-
 CREATE OR ALTER PROCEDURE dbo.clean_service_pages
 (
 	@service_id INT,
@@ -151,6 +153,7 @@ begin
 end
 go
 
+
 insert into dbo.websites (user_id, url, service_id)
 		values	(12, 'aaa.com', 1)
 
@@ -176,15 +179,12 @@ insert into dbo.websites (user_id, url, service_id)
 go
 
 exec dbo.new_website_from_service @user_id = 1, @url = 'bbb.com', @service_id = 12;
-
 exec dbo.new_website_from_service @user_id = 1, @url = 'aaa.com', @service_id = 12;
-
 exec dbo.new_website_from_service @user_id = 1, @url = 'kkk.com', @service_id = 12;
 
 -- select * from dbo.websites;
+GO
 
-
---------------------------------------------------------------------------------------------------------------
 -------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
 RETURNS VARCHAR(500)
@@ -203,16 +203,10 @@ AS BEGIN
 			END)
 	return @domain
 END
-go
-select * from dbo.websites
+GO
 
-update dbo.websites
-	set reindex = 0,
-		indexed = 1
-	where website_id = 3
-go
 -------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA A REINDEXAR --------------------------
-CREATE OR ALTER PROCEDURE dbo.reindex
+CREATE OR ALTER PROCEDURE dbo.reindex_website
 (
 	@website_id	INT
 )
@@ -224,6 +218,24 @@ BEGIN
 	where website_id = @website_id
 END
 GO
+execute dbo.get_websites 2
+
+-------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA COMO CAÍDA  --------------------------
+CREATE or ALTER PROCEDURE dbo.set_website_down 
+(
+	@website_id int
+)
+AS
+BEGIN
+    update dbo.websites
+	set isUp = 0,
+		reindex = 0,
+		indexed = 0
+	where website_id = @website_id
+END
+GO
+
+execute dbo.set_website_down 4
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.update_website
@@ -261,6 +273,7 @@ BEGIN
 	END
 END
 GO
+
 -------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI DOMINIO EXISTE --------------------------
 CREATE OR ALTER PROCEDURE dbo.find_website
 (
@@ -304,14 +317,80 @@ BEGIN
 	END
 END
 GO
-
--- exec dbo.check_domain 2, 'http://www.mercadolibre.com'
-
--- exec dbo.delete_website 2, 'mercadolibre9.com'
+-------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA COMO INDEXADA --------------------------
+CREATE OR ALTER PROCEDURE dbo.set_website_indexed
+(
+	@website_id	INT
+)
+AS
+BEGIN
+	update dbo.websites
+	set indexed = 1,
+		reindex = 0
+	where website_id = @website_id
+END
+GO
 
 select * from dbo.websites
+update dbo.websites
+	set service_id = 1
+	where website_id = 1
+	
 
-----------------------------------------------------------------------------------------------------------------
+CREATE OR ALTER TRIGGER tu_websites
+ON dbo.websites
+FOR update
+AS
+BEGIN
+	update dbo.services
+		set indexed = 1
+	from dbo.services s
+	join (SELECT
+			service_id,
+			COUNT(*) AS count,
+			CASE WHEN SUM(CASE WHEN indexed = 0 THEN 1 ELSE 0 END) > 0
+					THEN 0 ELSE 1 END AS result
+			FROM dbo.websites
+			WHERE service_id IS NOT NULL
+			GROUP BY service_id) as aux
+	on s.service_id = aux.service_id
+	where result = 1
+
+	update dbo.services
+		set indexed = 0
+	from dbo.services s
+	join (SELECT
+			service_id,
+			COUNT(*) AS count,
+			CASE WHEN SUM(CASE WHEN indexed = 0 THEN 1 ELSE 0 END) > 0
+					THEN 0 ELSE 1 END AS result
+			FROM dbo.websites
+			WHERE service_id IS NOT NULL
+			GROUP BY service_id) as aux
+	on s.service_id = aux.service_id
+	where result = 0
+END
+GO
+
+select *
+	from dbo.services s
+	join (SELECT
+			service_id,
+			COUNT(*) AS count,
+			CASE WHEN SUM(CASE WHEN indexed = 0 THEN 1 ELSE 0 END) > 0
+					THEN 0 ELSE 1 END AS result
+			FROM dbo.websites
+			WHERE service_id IS NOT NULL
+			GROUP BY service_id) as aux
+	on s.service_id = aux.service_id
+	where result = 1
+go
+
+select * from dbo.websites
+select * from dbo.services
+
+
+
 
 select user_id, url
 	from dbo.websites
@@ -320,10 +399,18 @@ select user_id, url
 	order by user_id
 
 
-select user_id, string_agg(url, ',') as pages
+select user_id, STRING_AGG(CONCAT(url,' ',website_id) , ',') as pages, STRING_AGG(website_id, ',') as website_id
 	from dbo.websites
 	where reindex = 1 and isActive = 1
 	group by user_id
+
+/*
+
+select user_id, STRING_AGG(url, ',') as pages, STRING_AGG(website_id, ',') as website_id
+	from dbo.websites
+	where reindex = 1 and isActive = 1
+	group by user_id
+*/
 
 -- DOMINIO, www.youtube.com/*
 -- AL PONER PARA REINDEXAR UNA PAGINA, SE TIENE QUE BORRAR TODO LO QUE EMPIECE CON EL DOMINIO DE ESA PAGINA

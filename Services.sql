@@ -42,7 +42,10 @@ CREATE TABLE dbo.services
 );
 go
 
-execute dbo.get_services 2
+SELECT * 
+  FROM users.INFORMATION_SCHEMA.ROUTINES
+ WHERE ROUTINE_TYPE = 'PROCEDURE'
+
 
 update dbo.services
 	set indexed = 1,
@@ -61,6 +64,8 @@ go
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
 
+execute dbo.get_services
+
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_services_user
 (
@@ -73,6 +78,9 @@ BEGIN
 		AND s.isActive = 1
 END
 GO
+
+execute dbo.get_services_user 3
+go
 
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.insert_service
@@ -89,7 +97,7 @@ BEGIN
 END
 GO
 
-execute dbo.insert_service 3, 'https://api.mercadolibre.com/products', 'https://api.mercadolibre.com/ping', 'REST'
+execute dbo.insert_service 3, 'https://api.mercadolibre.com/aaaaaa', 'https://api.mercadolibre.com/ping', 'REST'
 go
 
 
@@ -112,7 +120,8 @@ BEGIN
 	where s.service_id = @id
 END
 GO
--------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS --------------------------
+
+-------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS (CRAWLER) --------------------------
 CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
 BEGIN
@@ -123,9 +132,8 @@ BEGIN
 	 and isActive = 1
 END
 GO
-exec dbo.get_services_to_crawl
 
-select * from dbo.services
+exec dbo.get_services_to_crawl
 
 update dbo.services set isUp = 1
 go
@@ -142,14 +150,44 @@ END
 GO
 -- exec dbo.set_service_down
 
---------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------- PROCEDIMIENTO ALMACENADO PARA MARCAR SERVICIO A REINDEXAR O NO REINDEXAR --------------------------
+CREATE OR ALTER PROCEDURE dbo.reindex_service
+(
+	@service_id	INT,
+	@reindex	BIT
+)
+AS
+BEGIN
+	-- if true, servicio a reindexar
+	IF (@reindex = 1)
+	BEGIN
+		update dbo.services
+		set	reindex = 1,
+			indexed = 0
+		where service_id = @service_id
+	END
+	-- if true, servicio a no reindexar
+	IF (@reindex = 0)
+	BEGIN
+		update dbo.services
+		set reindex = 0
+		where service_id = @service_id
+	END
+END
+GO
+
+update dbo.services
+	set indexed = 1,
+		reindex = 0
+	where service_id = 12
+
+
+execute dbo.get_websites
+----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
 	where reindex = 1
 	group by user_id
-
-select * from dbo.services
-	where reindex = 1
 
 insert into dbo.services(user_id, url_resource, url_ping, protocol, reindex)
 values	(1, 'youtube0.com/0','youtube0.com/ping', 'REST', 0),
@@ -160,26 +198,3 @@ values	(1, 'youtube0.com/0','youtube0.com/ping', 'REST', 0),
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
-select * from dbo.users
-
-execute dbo.get_services_user 2
-
-select * from dbo.services
--------------------------- PROCEDIMIENTO ALMACENADO PARA MARCAR SERVICIO A REINDEXAR --------------------------
-CREATE OR ALTER PROCEDURE dbo.reindex_service
-(
-	@service_id	INT
-)
-AS
-BEGIN
-	update dbo.services
-	set	reindex = 1,
-		indexed = 0
-	where service_id = @service_id
-END
-GO
-
-update dbo.services
-	set indexed = 1,
-		reindex = 0
-	where service_id = 12
