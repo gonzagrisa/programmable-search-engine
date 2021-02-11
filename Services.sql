@@ -22,17 +22,19 @@ CREATE TABLE dbo.services
 );
 go
 
+update services set reindex = 1
+
 -- Para obtener todos los procedimientos almacenados de la base de datos
 SELECT * 
   FROM users.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
-
+go
 ----------------------------------------------------------------------------------------------------------------
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
 
-execute dbo.get_services
+--execute dbo.get_services
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_services_user
@@ -47,7 +49,7 @@ BEGIN
 END
 GO
 
-execute dbo.get_services_user 3
+-- execute dbo.get_services_user 3
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
@@ -142,7 +144,7 @@ update dbo.services
 	where service_id = 12
 
 
-execute dbo.get_websites
+-- execute dbo.get_websites
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services

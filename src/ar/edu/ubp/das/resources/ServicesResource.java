@@ -161,10 +161,8 @@ public class ServicesResource {
 				Client client = jdcf.createClient(endpoint);
 				Object res[] = client.invoke("ping");
 				client.close();
-				System.out.println("RESPUESTA SOAP:");
 				System.out.println(res[0]);
 				System.out.println("Service OK");
-
 			}
 		} catch (BadRequestException e) {
 			throw e;

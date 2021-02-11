@@ -42,15 +42,14 @@ BEGIN
 END
 GO
 
-select * from dbo.services
+-- select * from dbo.websites
+-- execute dbo.get_websites
 
-select * from dbo.websites
-execute dbo.get_websites
-
-update w
-	set indexed = 0
-	from dbo.websites w
-go
+-- update w
+-- 	set reindex = 0
+-- 	from dbo.websites w
+-- 	where w.url = 'mercadolibre9.com'
+-- go
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR NUEVA PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.new_website
 (
@@ -92,20 +91,20 @@ begin
 END
 GO
 
-select * from dbo.users where status = 1
+-- select * from dbo.users where status = 1
 
-execute dbo.get_websites
+-- execute dbo.get_websites
 
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-execute dbo.new_website 2, 'https://www.mercadolibre.com.ar'
-execute dbo.new_website 2, 'https://www.mercadolibre.com.br'
-execute dbo.new_website 2, 'https://www.mercadolibre.com.cl'
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-execute dbo.new_website 2, 'https://www.mercadolibre.com'
-go
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com.ar'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com.br'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com.cl'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- execute dbo.new_website 2, 'https://www.mercadolibre.com'
+-- go
 
 -------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
 CREATE OR ALTER PROCEDURE dbo.clean_service_pages
@@ -153,36 +152,36 @@ end
 go
 
 
-insert into dbo.websites (user_id, url, service_id)
-		values	(12, 'aaa.com', 1)
+-- insert into dbo.websites (user_id, url, service_id)
+-- 		values	(12, 'aaa.com', 1)
 
-insert into dbo.websites (user_id, url, service_id)
-		values	(1, 'aaa.com', NULL),
-				(1, 'bbb.net', 12),
-				(1, 'ccc.com', 12),
-				(1, 'ddd.com', 12),
-				(1, 'eee.com', 13),
-				(1, 'fff.com', 13),
-				(1, 'ggg.com', 13),
-				(1, 'hhh.com', 14),
-				(1, 'iii.com', 14),
-				(1, 'jjj.com', 14),
-				(1, 'kkk.com', NULL),
-				(1, 'lll.com', NULL),
-				(12, 'aaa.com', NULL),
-				(12, 'bbb.net', 12),
-				(12, 'ccc.com', 12),
-				(12, 'ddd.com', 12),
-				(12, 'eee.com', 13),
-				(12, 'fff.com', 13)
-go
+-- insert into dbo.websites (user_id, url, service_id)
+-- 		values	(1, 'aaa.com', NULL),
+-- 				(1, 'bbb.net', 12),
+-- 				(1, 'ccc.com', 12),
+-- 				(1, 'ddd.com', 12),
+-- 				(1, 'eee.com', 13),
+-- 				(1, 'fff.com', 13),
+-- 				(1, 'ggg.com', 13),
+-- 				(1, 'hhh.com', 14),
+-- 				(1, 'iii.com', 14),
+-- 				(1, 'jjj.com', 14),
+-- 				(1, 'kkk.com', NULL),
+-- 				(1, 'lll.com', NULL),
+-- 				(12, 'aaa.com', NULL),
+-- 				(12, 'bbb.net', 12),
+-- 				(12, 'ccc.com', 12),
+-- 				(12, 'ddd.com', 12),
+-- 				(12, 'eee.com', 13),
+-- 				(12, 'fff.com', 13)
+-- go
 
-exec dbo.new_website_from_service @user_id = 1, @url = 'bbb.com', @service_id = 12;
-exec dbo.new_website_from_service @user_id = 1, @url = 'aaa.com', @service_id = 12;
-exec dbo.new_website_from_service @user_id = 1, @url = 'kkk.com', @service_id = 12;
+-- exec dbo.new_website_from_service @user_id = 1, @url = 'bbb.com', @service_id = 12;
+-- exec dbo.new_website_from_service @user_id = 1, @url = 'aaa.com', @service_id = 12;
+-- exec dbo.new_website_from_service @user_id = 1, @url = 'kkk.com', @service_id = 12;
 
 -- select * from dbo.websites;
-GO
+
 
 -------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
@@ -217,7 +216,7 @@ BEGIN
 	where website_id = @website_id
 END
 GO
-execute dbo.get_websites 2
+-- execute dbo.get_websites 2
 
 -------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA COMO CAÍDA  --------------------------
 CREATE or ALTER PROCEDURE dbo.set_website_down 
@@ -234,7 +233,7 @@ BEGIN
 END
 GO
 
-execute dbo.set_website_down 4
+-- execute dbo.set_website_down 4
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.update_website
@@ -330,10 +329,10 @@ BEGIN
 END
 GO
 
-select * from dbo.websites
-update dbo.websites
-	set service_id = 1
-	where website_id = 1
+-- select * from dbo.websites
+-- update dbo.websites
+-- 	set service_id = 1
+-- 	where website_id = 1
 	
 
 CREATE OR ALTER TRIGGER tu_websites
