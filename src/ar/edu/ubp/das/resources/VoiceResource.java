@@ -16,6 +16,7 @@ import com.google.gson.JsonParser;
 
 import ar.edu.ubp.das.beans.AudioBean;
 import ar.edu.ubp.das.beans.Base64Audio;
+import ar.edu.ubp.das.logging.MyLogger;
 
 @Path("voice")
 public class VoiceResource {
@@ -23,6 +24,11 @@ public class VoiceResource {
 	private WebTarget target;
 	private static final String KEY = "KEY";
 	private static final String URI = "https://speech.googleapis.com/v1p1beta1/speech:recognize?key=" + KEY;
+	private MyLogger logger;
+	
+	public VoiceResource() {
+		this.logger = new MyLogger(this.getClass().getSimpleName());
+	}
 
 	@POST
 	@Path("/recognize")
@@ -30,6 +36,7 @@ public class VoiceResource {
 	public Response recognize(Base64Audio b64) {
 		System.out.println("/recognize");
 		if (b64.getB64audio() == null || b64.getB64audio().isEmpty()) {
+			this.logger.log(MyLogger.ERROR, "Petición de reconocimiento de voz con audio faltante");
 			return Response.status(Status.BAD_REQUEST).entity("Audio Faltante").build();
 		}
 		AudioBean audio = new AudioBean();
@@ -44,8 +51,10 @@ public class VoiceResource {
 			JsonArray results = JsonParser.parseString(json).getAsJsonObject()
 										  .getAsJsonArray("results").get(0)
 										  .getAsJsonObject().getAsJsonArray("alternatives");
+			this.logger.log(MyLogger.INFO, "Petición de reconocimiento de voz exitoso");
 			return Response.status(Status.OK).entity(results).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Petición de reconocimiento de voz con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity("No se pudo reconocer el audio").build();
 		}
 	}
