@@ -22,13 +22,13 @@ import ar.edu.ubp.das.security.Secured;
 public class PreferencesResource {
 	
 	private MyLogger logger;
+
+	@Context
+	ContainerRequestContext req;
 	
 	public PreferencesResource() {
 		this.logger = new MyLogger(this.getClass().getSimpleName());
 	}
-
-	@Context
-	ContainerRequestContext req;
 
 	@GET
 	@Path("ping")
