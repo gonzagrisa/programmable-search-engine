@@ -45,7 +45,7 @@ public class PreferencesResource {
 			this.logger.log(MyLogger.INFO, "Petición de preferencias exitosa");
 			return Response.ok().entity(dao.find((Integer) req.getProperty("id"))).build();
 		} catch (SQLException e) {
-			this.logger.log(MyLogger.ERROR, "Petición de preferencias con error:: " + e.getMessage());
+			this.logger.log(MyLogger.ERROR, "Petición de preferencias con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}

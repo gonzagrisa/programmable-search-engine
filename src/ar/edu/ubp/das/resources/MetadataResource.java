@@ -55,10 +55,13 @@ public class MetadataResource {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.delete(metadata.getId());
-			this.logger.log(MyLogger.INFO, "Eliminación de metadato exitosa");
+			this.logger.log(MyLogger.INFO, "Eliminación de metadato #" + metadata.getId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "Eliminación de metadato con error: " + e.getMessage());
+			this.logger.log(
+				MyLogger.ERROR,
+				"Eliminación de metadato #" + metadata.getId() + " con error: " + e.getMessage()
+			);
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
