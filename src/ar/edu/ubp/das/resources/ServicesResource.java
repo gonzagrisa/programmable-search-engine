@@ -82,12 +82,12 @@ public class ServicesResource {
 
 			Dao<ServiceBean, Integer> dao = this.getDao();
 			dao.insert(service);
-			this.logger.log(MyLogger.INFO, "Inserción de servicio #" + service.getServiceId() + " exitosa");
+			this.logger.log(MyLogger.INFO, "Inserción de servicio exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			this.logger.log(
 				MyLogger.ERROR,
-				"Inserción de servicio #" + service.getServiceId() + " con error: " + e.getMessage()
+				"Inserción de servicio con error: " + e.getMessage()
 			);
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
