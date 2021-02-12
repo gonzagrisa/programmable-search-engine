@@ -13,6 +13,7 @@ CREATE TABLE dbo.services
 	protocol        VARCHAR(4)    	NOT NULL,
 	reindex			BIT				NOT NULL default 1,
 	indexed			BIT				NOT NULL default 0,
+	index_date		SMALLDATETIME	NULL,
 	isActive		BIT				NOT NULL default 1,
 	isUp			BIT				NOT NULL default 1,
 	constraint PK__services__END primary key (service_id),
@@ -22,18 +23,16 @@ CREATE TABLE dbo.services
 );
 go
 
+select * from dbo.services
+
 -- Para obtener todos los procedimientos almacenados de la base de datos
 SELECT * 
   FROM users.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
 
 ----------------------------------------------------------------------------------------------------------------
-
--- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
--- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
-
-execute dbo.get_services
-
+execute dbo.get_services_to_crawl
+go
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_services_user
 (
@@ -48,14 +47,16 @@ END
 GO
 
 execute dbo.get_services_user 3
-go
 
+
+
+go
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.insert_service
 (
 	@user_id		INT,
-	@url_resource	VARCHAR(500),
 	@url_ping		VARCHAR(500),
+	@url_resource	VARCHAR(500),
 	@protocol       VARCHAR(4)
 )
 AS
@@ -64,6 +65,10 @@ BEGIN
 	values	(@user_id, @url_resource, @url_ping, @protocol)
 END
 GO
+
+execute dbo.insert_service 2, 'http://desktop-a0iuvm3:8088/asdad', 'http://desktop-a0iuvm3:8088/asdad1', 'REST'
+
+select * from dbo.services
 
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
@@ -80,12 +85,15 @@ BEGIN
 		url_ping = @url_ping,
 		protocol = @protocol,
 		reindex = 1,
-		indexed = 0
+		indexed = 0,
+		isUp = 1,
+		index_date = null
 	from dbo.services s
 	where s.service_id = @id
 END
 GO
 
+execute dbo.get_services_to_crawl
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS (CRAWLER) --------------------------
 CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
@@ -93,25 +101,26 @@ BEGIN
     select user_id, service_id, url_resource, url_ping, protocol
 	from dbo.services
 	where reindex = 1
-		 and isUp = 1
 	 and isActive = 1
 END
 GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO PARA REGISTRAR UN SERVICIO COMO CAÍDO --------------------------
-CREATE or ALTER PROCEDURE dbo.set_service_down (
-	@service_id int
+CREATE or ALTER PROCEDURE dbo.update_service_status (
+	@service_id int,
+	@status		BIT
 )
 AS
 BEGIN
-    update dbo.services
-	set isUp = 0
-	where service_id = @service_id
+	update dbo.services
+		set isUp = @status
+		where service_id = @service_id
 END
 GO
 
--------------------------- PROCEDIMIENTO ALMACENADO PARA MARCAR SERVICIO A REINDEXAR O NO REINDEXAR --------------------------
-CREATE OR ALTER PROCEDURE dbo.reindex_service
+-------------------------- PROCEDIMIENTO ALMACENADO PARA ACTUALIZAR REINDEX DE SERVICIO --------------------------
+-- PONER REINDEX = 0 si ya se lo esta indexando (crawler), 1 si se lo quiere reindexar (usuario)
+CREATE OR ALTER PROCEDURE dbo.update_reindex_status
 (
 	@service_id	INT,
 	@reindex	BIT
@@ -123,7 +132,9 @@ BEGIN
 	BEGIN
 		update dbo.services
 		set	reindex = 1,
-			indexed = 0
+			indexed = 0,
+			isUp = 1,
+			index_date = NULL
 		where service_id = @service_id
 	END
 	-- if false, servicio a no reindexar
@@ -136,13 +147,34 @@ BEGIN
 END
 GO
 
-update dbo.services
-	set indexed = 1,
-		reindex = 0
-	where service_id = 12
+-------------------------- PROCEDIMIENTO ALMACENADO PARA ELIMINAR SERVICIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.delete_service
+(
+	@service_id	INT
+)
+AS
+BEGIN
+	update dbo.services
+		set isActive = 0
+	where service_id = @service_id
+END
+GO
 
+-------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER TODAS LAS PAGINAS REGISTRADAS DE UN SERVICIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.get_service_websites
+(
+	@service_id	INT
+)
+AS
+BEGIN
+	select * 
+		from dbo.websites
+		where @service_id = @service_id
+END
+GO
 
-execute dbo.get_websites
+execute dbo.get_service_websites 1
+
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
 	from dbo.services
