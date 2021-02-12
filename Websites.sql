@@ -341,21 +341,6 @@ BEGIN
 			GROUP BY service_id) as aux
 	on s.service_id = aux.service_id
 	where result = 1
-	/*
-	update dbo.services
-		set indexed = 0
-	from dbo.services s
-	join (SELECT
-			service_id,
-			COUNT(*) AS count,
-			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1 THEN 1 ELSE 0 END) > 0
-					THEN 0 ELSE 1 END AS result
-			FROM dbo.websites
-			WHERE service_id IS NOT NULL
-			GROUP BY service_id) as aux
-	on s.service_id = aux.service_id
-	where result = 0
-	*/
 END
 GO
 
@@ -376,6 +361,25 @@ select *
 	on s.service_id = aux.service_id
 	where result = 1
 go
+
+/*
+DEPRECADO: SE USABA PARA ACTUALIZAR EL SERVICIO COMO INDEXADO = 0 SI ALGUNA DE LAS PAGINAS QUE SALIERON DE ESE SERVICIO SE PONIA A REINDEXAR
+NO TIENE SENTIDO
+
+	update dbo.services
+		set indexed = 0
+	from dbo.services s
+	join (SELECT
+			service_id,
+			COUNT(*) AS count,
+			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1 THEN 1 ELSE 0 END) > 0
+					THEN 0 ELSE 1 END AS result
+			FROM dbo.websites
+			WHERE service_id IS NOT NULL
+			GROUP BY service_id) as aux
+	on s.service_id = aux.service_id
+	where result = 0
+*/
 
 select * from dbo.services
 

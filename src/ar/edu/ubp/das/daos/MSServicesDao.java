@@ -19,8 +19,42 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		service.setProtocol(result.getString("protocol"));
 		service.setReindex(result.getBoolean("reindex"));
 		service.setIndexed(result.getBoolean("indexed"));
+		service.setIndexDate(result.getString("index_date"));
 		service.setIsUp(result.getBoolean("isUp"));
 		return service;
+	}
+	
+	@Override
+	public List<ServiceBean> select(Integer userId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.get_services_user(?)");
+			this.setParameter(1, userId);
+			return this.executeQuery();
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
+	public List<ServiceBean> select(ServiceBean arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public void update(Integer serviceId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.update_reindex_status(?,?)");
+			this.setParameter(1, serviceId);
+			this.setParameter(2, true);
+			if (this.executeUpdate() == 0) {
+				throw new SQLException();
+			}
+		} finally {
+			this.close();
+		}
 	}
 	
 	@Override
@@ -29,8 +63,8 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 			this.connect();
 			this.setProcedure("dbo.insert_service(?,?,?,?)");
 			this.setParameter(1, service.getUserId());
-			this.setParameter(2, service.getURLResource());
-			this.setParameter(3, service.getURLPing());
+			this.setParameter(2, service.getURLPing());
+			this.setParameter(3, service.getURLResource());
 			this.setParameter(4, service.getProtocol());
 			if (this.executeUpdate() == 0)
 				throw new SQLException("Hubo un problema al insertar el servicio");
@@ -115,24 +149,6 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	}
 
 	@Override
-	public List<ServiceBean> select(Integer userId) throws SQLException {
-		try {
-			this.connect();
-			this.setProcedure("dbo.get_services_user(?)");
-			this.setParameter(1, userId);
-			return this.executeQuery();
-		} finally {
-			this.close();
-		}
-	}
-
-	@Override
-	public List<ServiceBean> select(ServiceBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void update(ServiceBean arg0, Integer arg1) throws SQLException {
 		// TODO Auto-generated method stub
 		
@@ -143,20 +159,5 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	@Override
-	public void update(Integer serviceId) throws SQLException {
-		try {
-			this.connect();
-			this.setProcedure("dbo.reindex_service(?)");
-			this.setParameter(1, serviceId);
-			if (this.executeUpdate() == 0) {
-				throw new SQLException();
-			}
-		} finally {
-			this.close();
-		}
-	}
-
 
 }

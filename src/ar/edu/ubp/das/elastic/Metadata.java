@@ -1,5 +1,7 @@
 package ar.edu.ubp.das.elastic;
 
+import java.util.List;
+
 public class Metadata {
 	private String id;
 	private Integer userId;
@@ -12,6 +14,24 @@ public class Metadata {
 	private Integer textLength;
 	private Boolean approved;
 	private Integer popularity;
+	private List<String> topWords;
+	private String[] tags;
+	
+	public String[] getTags() {
+		return tags;
+	}
+
+	public void setTags(String[] tags) {
+		this.tags = tags;
+	}
+
+	public List<String> getTopWords() {
+		return topWords;
+	}
+
+	public void setTopWords(List<String> topWords) {
+		this.topWords = topWords;
+	}
 
 	public String getId() {
 		return id;

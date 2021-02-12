@@ -24,10 +24,14 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
+import org.elasticsearch.ElasticsearchException;
 
 import ar.edu.ubp.das.beans.ServiceBean;
+import ar.edu.ubp.das.beans.WebsiteBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
+import ar.edu.ubp.das.elastic.MetadataDao;
+import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 import ar.edu.ubp.das.security.Secured;
 
 @Path("services")
@@ -35,11 +39,10 @@ public class ServicesResource {
 
 	private static final String PROTOCOL_REST = "REST";
 	private static final String PROTOCOL_SOAP = "SOAP";
+	private static final String WSDL = "?wsdl";
 
-	private static final HttpClient MyHttpClient = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+	private static final HttpClient MyHttpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
+			.connectTimeout(Duration.ofSeconds(5)).build();
 
 	@Context
 	ContainerRequestContext req;
@@ -54,7 +57,7 @@ public class ServicesResource {
 	@Secured
 	public Response getServices() {
 		try {
-			Dao<ServiceBean, Integer> dao = this.getDao();
+			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			List<ServiceBean> services = dao.select((Integer) req.getProperty("id"));
 			return Response.status(Status.OK).entity(services).build();
 		} catch (Exception e) {
@@ -65,13 +68,12 @@ public class ServicesResource {
 	@POST
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response insert(ServiceBean service) {
+	public Response insertService(ServiceBean service) {
 		service.setUserId((Integer) req.getProperty("id"));
 		try {
 			this.checkBody(service);
-			this.checkPingEndpoint(service.getURLPing(), service.getProtocol());
-
-			Dao<ServiceBean, Integer> dao = this.getDao();
+			this.checkResource(service);
+			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			dao.insert(service);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
@@ -83,30 +85,29 @@ public class ServicesResource {
 	@Path("{serviceId}")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response update(@PathParam("serviceId") Integer id, ServiceBean service) {
-		// TODO: ver que hacer con las paginas que salieron del servicio
+	public Response updateServiceInfo(@PathParam("serviceId") Integer id, ServiceBean service) {
 		try {
 			this.checkBody(service);
+			checkResource(service);
 			service.setUserId((Integer) req.getProperty("id"));
-			this.checkPingEndpoint(service.getURLPing(), service.getProtocol());
-			Dao<ServiceBean, Integer> dao = this.getDao();
+			this.deleteServiceWebsites(id);
+			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			service.setServiceId(id);
-			System.out.println(service);
 			dao.update(service);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@PUT
 	@Path("{serviceId}/reindex")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response reindexService(@PathParam("serviceId") Integer id) {
 		try {
-			Dao<ServiceBean, Integer> dao = this.getDao();
-			dao.update(id);
+			this.deleteServiceWebsites(id);
+			this.getDao().update(id);;
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -117,17 +118,17 @@ public class ServicesResource {
 	@Path("{serviceId}")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response delete(@PathParam("serviceId") Integer id) {
-		// TODO: ver que hacer con las paginas que salieron del servicio
+	public Response deleteService(@PathParam("serviceId") Integer id) {
 		try {
-			Dao<ServiceBean, Integer> dao = this.getDao();
-			dao.delete(id);
+			this.deleteServiceWebsites(id);
+			this.getDao().delete(id);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).build();
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path("test")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -140,20 +141,46 @@ public class ServicesResource {
 		}
 	}
 
+	
+	private void deleteServiceWebsites(Integer serviceId) throws ElasticsearchException, Exception {
+		Dao<WebsiteBean, ServiceBean> dao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
+		MetadataDao elastic = new MetadataDaoImpl();
+		List<WebsiteBean> websites = dao.select(serviceId);
+		for (WebsiteBean website : websites) {
+			System.out.println("deleting ID:" + website.getWebsiteId());
+			elastic.deleteWebsiteId(website.getWebsiteId());
+		}
+	}
+	
+	private void checkResource(ServiceBean service) throws Exception {
+		String ping = service.getURLPing().toLowerCase();
+		String resource = service.getURLResource().toLowerCase();
+		String protocol = service.getProtocol();
+		switch (protocol) {
+			case PROTOCOL_REST: {
+				if (ping.contains(WSDL) || resource.contains(WSDL))
+					throw new Exception("El protocolo no coincide con el tipo de recurso");
+				break;
+			}
+			case PROTOCOL_SOAP: {
+				if (!ping.contains(WSDL) || !resource.contains(WSDL))
+					throw new Exception("El protocolo no coincide con el tipo de recurso");
+				break;
+			}
+		}
+	}
+
 	private void checkPingEndpoint(String endpoint, String protocol) throws Exception, BadRequestException {
 		try {
 			System.out.println("PROBANDO ENDPOINT " + endpoint + " (" + protocol + ")");
 			if (protocol.equals(PROTOCOL_REST)) {
-				HttpRequest request = HttpRequest.newBuilder()
-						.GET()
-						.uri(URI.create(endpoint))
-						.build();
+				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint)).build();
 				HttpResponse<String> response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() >= 400) {
 					throw new Exception();
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
-				if (!endpoint.toLowerCase().contains("?wsdl")){
+				if (!endpoint.toLowerCase().contains("?wsdl")) {
 					System.out.println("not a wsdl service");
 					throw new BadRequestException("El servicio no es un Servicio Web (SOAP)");
 				}
@@ -174,7 +201,7 @@ public class ServicesResource {
 		}
 	}
 
-	private Dao<ServiceBean, Integer> getDao() throws SQLException {
+	private Dao<ServiceBean, ServiceBean> getDao() throws SQLException {
 		return DaoFactory.getDao("Services", "ar.edu.ubp.das");
 	}
 

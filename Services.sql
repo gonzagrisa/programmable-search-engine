@@ -160,6 +160,12 @@ BEGIN
 END
 GO
 
+select * from dbo.websites
+
+
+select * from dbo.services
+
+execute delete_service 1
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER TODAS LAS PAGINAS REGISTRADAS DE UN SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_service_websites
 (
@@ -169,7 +175,7 @@ AS
 BEGIN
 	select * 
 		from dbo.websites
-		where @service_id = @service_id
+		where service_id = @service_id
 END
 GO
 

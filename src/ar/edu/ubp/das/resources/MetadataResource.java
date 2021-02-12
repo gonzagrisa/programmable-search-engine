@@ -4,7 +4,9 @@ import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -32,13 +34,26 @@ public class MetadataResource {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@DELETE
 	@Secured
-	public Response deleteMetadata(Metadata metadata) {
+	@Path("{id}")
+	public Response deleteMetadata(@PathParam("id") String id) {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
-			elastic.delete(metadata.getId());
+			elastic.delete(id);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Secured
+	public Response updateMetadata(Metadata metadata) {
+		try {
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.update(metadata);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
