@@ -1,5 +1,7 @@
 package ar.edu.ubp.das.resources;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -11,6 +13,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -20,6 +23,8 @@ import javax.ws.rs.core.Response.Status;
 import ar.edu.ubp.das.beans.WebsiteBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
+import ar.edu.ubp.das.elastic.MetadataDao;
+import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 import ar.edu.ubp.das.security.Secured;
 
 @Path("websites")
@@ -55,7 +60,7 @@ public class WebsitesResource {
 	public Response addWebsite(WebsiteBean website) {
 		try {
 			this.checkBody(website);
-			this.isDomainValid(website);
+			this.isDomainRegistered(website);
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			website.setUserId((Integer) req.getProperty("id"));
 			dao.insert(website);
@@ -76,20 +81,24 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			dao.update(websiteId);
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteWebsiteId(websiteId);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).build();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 
-	// TODO: AGREGAR LA LOGICA PARA MEILI, HAY QUE BORRAR AHI O HACER OTRA COSA
 	@PUT
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateWebsite(WebsiteBean website) {
 		try {
+			System.out.println("UPDATING");
 			website.setUserId((Integer) req.getProperty("id"));
-			this.isDomainValid(website);
+			isDomainRegistered(website);
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteWebsiteId(website.getWebsiteId());
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			dao.update(website);
 			return Response.status(Status.NO_CONTENT).build();
@@ -100,6 +109,27 @@ public class WebsitesResource {
 		}
 	}
 
+	@GET
+	@Path("check")
+	@Secured
+	public Response pingUrl(@QueryParam("url") String url) {
+		url = url.replaceFirst("^https", "http"); // Otherwise an exception may be thrown on invalid SSL certificates.
+		try {
+			HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
+			connection.setRequestMethod("HEAD");
+			int responseCode = connection.getResponseCode();
+			if (200 <= responseCode && responseCode <= 399) {
+				return Response.status(Status.OK).build();
+			} else {
+				throw new Exception();
+			}
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+	
 	@POST
 	@Path("check-domain")
 	@Secured
@@ -107,7 +137,7 @@ public class WebsitesResource {
 	public Response checkDomain(WebsiteBean website) {
 		try {
 			website.setUserId((Integer) req.getProperty("id"));
-			this.isDomainValid(website);
+			this.isDomainRegistered(website);
 			return Response.status(Status.OK).build();
 		} catch (SQLException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -116,7 +146,6 @@ public class WebsitesResource {
 		}
 	}
 
-	// TODO: AGREGAR LA LOGICA PARA MEILI, HAY QUE BORRAR AHI O HACER OTRA COSA
 	@DELETE
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -124,6 +153,8 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			domainExists(website);
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteWebsiteId(website.getWebsiteId());
 			dao.delete(website.getWebsiteId());
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
@@ -133,7 +164,7 @@ public class WebsitesResource {
 		}
 	}
 
-	private void isDomainValid(WebsiteBean website) throws Exception, SQLException {
+	private void isDomainRegistered(WebsiteBean website) throws Exception, SQLException {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			if (dao.select(website).size() > 0) {

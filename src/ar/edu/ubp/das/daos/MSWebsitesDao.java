@@ -2,7 +2,6 @@ package ar.edu.ubp.das.daos;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
 
 import ar.edu.ubp.das.beans.WebsiteBean;
@@ -16,9 +15,11 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 		web.setWebsiteId(result.getInt("website_id"));
 		web.setUserId(result.getInt("user_id"));
 		web.setUrl(result.getString("url"));
-		web.setIsActive(result.getBoolean("isActive"));
-		web.setReindex(result.getBoolean("reindex"));
+		web.setServiceId(result.getInt("service_id"));
 		web.setIndexed(result.getBoolean("indexed"));
+		web.setIndexDate(result.getString("index_date"));
+		web.setReindex(result.getBoolean("reindex"));
+		web.setIsUp(result.getBoolean("isUp"));
 		return web;
 	}
 	
@@ -38,10 +39,12 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	public void update(Integer id) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.reindex(?)");
+			this.setProcedure("dbo.reindex_website(?,?)");
 			this.setParameter(1, id);
-			if (this.executeUpdate() == 0) {
-				throw new SQLException("La página a actualizar no existe");
+			this.setOutParameter(2, java.sql.Types.INTEGER);
+			this.executeUpdate();
+			if (this.getIntParam(2) == 0) {
+				throw new SQLException("Error al insertar pagina");
 			}
 		} finally {
 			this.close();
@@ -52,11 +55,13 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	public void update(WebsiteBean website) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.update_website(?,?)");
+			this.setProcedure("dbo.update_website(?,?,?)");
 			this.setParameter(1, website.getWebsiteId());
 			this.setParameter(2, website.getUrl());
-			if (this.executeUpdate() == 0) {
-				throw new SQLException("Error al actualizar");
+			this.setOutParameter(3, java.sql.Types.INTEGER);
+			this.executeUpdate();
+			if (this.getIntParam(3) == 0) {
+				throw new SQLException("Error al actualizar pagina");
 			}
 		} finally {
 			this.close();
@@ -67,11 +72,14 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	public void insert(WebsiteBean web) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.new_website(?,?,?)");
+			this.setProcedure("dbo.insert_website(?,?,?)");
 			this.setParameter(1, web.getUserId());
 			this.setParameter(2, web.getUrl());
-			this.setNull(3, Types.INTEGER); //Usado por el crawler
+			this.setOutParameter(3, java.sql.Types.INTEGER);
 			this.executeUpdate();
+			if (this.getIntParam(3) == 0) {
+				throw new SQLException("No se pudo insertar la pagina web");
+			}
 		} finally {
 			this.close();
 		}
@@ -81,10 +89,12 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	public void delete(Integer websiteId) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.delete_website(?)");
+			this.setProcedure("dbo.delete_website(?,?)");
 			this.setParameter(1, websiteId);
-			if (this.executeUpdate() != 1) {
-				throw new SQLException("Error al realizar la operacion");
+			this.setOutParameter(2, java.sql.Types.INTEGER);
+			this.executeUpdate();
+			if (this.getIntParam(2) == 0) {
+				throw new SQLException("Error al eliminar pagina");
 			}
 		} finally {
 			this.close();
@@ -110,15 +120,6 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 	}
 	
 	@Override
-	public void delete(WebsiteBean website) throws SQLException {
-	}
-	
-	@Override
-	public void delete(WebsiteBean website, Integer id) throws SQLException {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	public WebsiteBean find(Integer websiteId) throws SQLException {
 		try {
 			this.connect();
@@ -133,6 +134,15 @@ public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
 		} finally {
 			this.close();
 		}
+	}
+	
+	@Override
+	public void delete(WebsiteBean website) throws SQLException {
+	}
+	
+	@Override
+	public void delete(WebsiteBean website, Integer id) throws SQLException {
+		// TODO Auto-generated method stub
 	}
 
 	@Override
