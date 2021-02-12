@@ -2,16 +2,13 @@ package ar.edu.ubp.das.beans;
 
 import javax.json.bind.annotation.JsonbTransient;
 
-public class ServiceBean {
+public class ServiceBean extends StatusBean {
 	private Integer serviceId;
 	private Integer userId;
 	private String 	URLResource;
 	private String 	URLPing;
 	private String 	protocol;
-	private Boolean reindex;
-	private Boolean indexed;
-	private Boolean isUp;
-		
+	
 	@JsonbTransient
 	public Boolean isValid() {
 		return this.URLResource != null &&
@@ -39,18 +36,6 @@ public class ServiceBean {
 		return protocol;
 	}
 
-	public Boolean getReindex() {
-		return reindex;
-	}
-
-	public Boolean getIndexed() {
-		return indexed;
-	}
-
-	public Boolean getIsUp() {
-		return isUp;
-	}
-
 	public void setServiceId(Integer serviceId) {
 		this.serviceId = serviceId;
 	}
@@ -71,28 +56,14 @@ public class ServiceBean {
 		this.protocol = protocol;
 	}
 
-	public void setReindex(Boolean reindex) {
-		this.reindex = reindex;
-	}
-
-	public void setIndexed(Boolean indexed) {
-		this.indexed = indexed;
-	}
-
-	public void setIsUp(Boolean isUp) {
-		this.isUp = isUp;
-	}
-
 	@Override
 	public String toString() {
-		String output = "\nuserId: " + userId;
+		String output = "userId: " + userId;
 		output += "\nserviceId: " + serviceId;
 		output += "\nURLResource: " + URLResource;
 		output += "\nURLPing: " + URLPing;
 		output += "\nprotocol: " + protocol;
-		output += "\nreindex: " + reindex;
-		output += "\nindexed: " + indexed;
-		output += "\nisUp: " + isUp;
+		output += super.toString();
 		return output;
 	}
 }

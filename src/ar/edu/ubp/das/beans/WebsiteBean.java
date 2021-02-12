@@ -2,14 +2,20 @@ package ar.edu.ubp.das.beans;
 
 import javax.json.bind.annotation.JsonbTransient;
 
-public class WebsiteBean {
+public class WebsiteBean extends StatusBean {
 	private Integer websiteId;
 	private Integer userId;
 	private String url;
-	private Boolean isActive;
-	private Boolean reindex;
-	private Boolean indexed;
+	private Integer serviceId;
 	
+	public Integer getServiceId() {
+		return serviceId;
+	}
+
+	public void setServiceId(Integer serviceId) {
+		this.serviceId = serviceId;
+	}
+
 	public Integer getWebsiteId() {
 		return websiteId;
 	}
@@ -18,28 +24,12 @@ public class WebsiteBean {
 		this.websiteId = websiteId;
 	}
 	
-	public Boolean getIndexed() {
-		return indexed;
-	}
-
-	public void setIndexed(Boolean indexed) {
-		this.indexed = indexed;
-	}
-
 	public Integer getUserId() {
 		return userId;
 	}
 
 	public String getUrl() {
 		return url;
-	}
-
-	public Boolean getIsActive() {
-		return isActive;
-	}
-
-	public Boolean getReindex() {
-		return reindex;
 	}
 
 	public void setUserId(Integer userId) {
@@ -50,14 +40,6 @@ public class WebsiteBean {
 		this.url = url;
 	}
 
-	public void setIsActive(Boolean isActive) {
-		this.isActive = isActive;
-	}
-
-	public void setReindex(Boolean reindex) {
-		this.reindex = reindex;
-	}
-
 	// Datos obligatorios: userId y url
 	@JsonbTransient
 	public boolean isValid() {
@@ -65,4 +47,13 @@ public class WebsiteBean {
 				this.getUrl() != null;
 	}
 	
+	@Override
+	public String toString() {
+		String output = "Website Id: " + websiteId;
+		output += "User Id: " + userId;
+		output += "Url: " + url;
+		output += "Service Id: " + serviceId;
+		output += super.toString();
+		return output;
+	}
 }
