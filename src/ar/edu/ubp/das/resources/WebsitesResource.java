@@ -25,17 +25,24 @@ import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.elastic.MetadataDao;
 import ar.edu.ubp.das.elastic.MetadataDaoImpl;
+import ar.edu.ubp.das.logging.MyLogger;
 import ar.edu.ubp.das.security.Secured;
 
 @Path("websites")
 public class WebsitesResource {
+	private MyLogger logger;
 
 	@Context
 	ContainerRequestContext req;
+	
+	public WebsitesResource() {
+		this.logger = new MyLogger(this.getClass().getSimpleName());
+	}
 
 	@GET
 	@Path("ping")
 	public Response ping() {
+		this.logger.log(MyLogger.INFO, "Petición de ping exitosa");
 		return Response.status(Status.OK).entity("pong!").build();
 	}
 
@@ -46,10 +53,13 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			List<WebsiteBean> websites = dao.select((Integer) req.getProperty("id"));
+			this.logger.log(MyLogger.INFO, "Petición de páginas exitosa");
 			return Response.ok().entity(websites).build();
 		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Petición de páginas con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Petición de páginas con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -64,10 +74,13 @@ public class WebsitesResource {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			website.setUserId((Integer) req.getProperty("id"));
 			dao.insert(website);
+			this.logger.log(MyLogger.INFO, "Inserción de página exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Inserción de página con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Inserción de página con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -83,12 +96,15 @@ public class WebsitesResource {
 			dao.update(websiteId);
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.deleteWebsiteId(websiteId);
+			this.logger.log(MyLogger.INFO, "Petición de reindexado de página exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			this.logger.log(MyLogger.ERROR, "Petición de reindexado de página con error: " + e.getMessage());
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 
+	// TODO: AGREGAR LA LOGICA PARA ELASTIC, HAY QUE BORRAR AHI O HACER OTRA COSA
 	@PUT
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -101,10 +117,13 @@ public class WebsitesResource {
 			elastic.deleteWebsiteId(website.getWebsiteId());
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			dao.update(website);
+			this.logger.log(MyLogger.INFO, "Actualización de página exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Actualización de página con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Actualización de página con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -138,10 +157,13 @@ public class WebsitesResource {
 		try {
 			website.setUserId((Integer) req.getProperty("id"));
 			this.isDomainRegistered(website);
+			this.logger.log(MyLogger.INFO, "Chequeo de dominio exitoso");
 			return Response.status(Status.OK).build();
 		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Chequeo de dominio con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Chequeo de dominio con error: " + e.getMessage());
 			return Response.status(Status.CONFLICT).entity("Dominio ya registrado").build();
 		}
 	}
@@ -156,10 +178,13 @@ public class WebsitesResource {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.deleteWebsiteId(website.getWebsiteId());
 			dao.delete(website.getWebsiteId());
+			this.logger.log(MyLogger.INFO, "Eliminación de página exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Eliminación de página con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Eliminación de página con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -179,7 +204,7 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			if (dao.find(website.getWebsiteId()) == null) {
-				throw new Exception("No se encuentr� ninguna p�gina web con ese criterio");
+				throw new Exception("No se encuentr� ninguna p�gina web con ese criterio");
 			}
 		} catch (SQLException e) {
 			throw e;
@@ -201,7 +226,7 @@ public class WebsitesResource {
 				throw new Exception();
 			}
 		} catch (Exception e) {
-			throw new Exception("Debe enviar la informaci�n requerida de la p�gina");
+			throw new Exception("Debe enviar la información requerida de la página");
 		}
 	}
 }

@@ -123,7 +123,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.setProcedure("dbo.delete_account(?)");
 			this.setParameter(1, id);
 			if (this.executeUpdate() == 0)
-				throw new SQLException("Error al ejecutar la operaci�n");
+				throw new SQLException("Error al ejecutar la operación");
 			return;
 		} finally {
 			this.close();

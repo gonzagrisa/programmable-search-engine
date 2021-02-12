@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import ar.edu.ubp.das.beans.UserBean;
+import ar.edu.ubp.das.logging.MyLogger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -24,6 +25,11 @@ import io.jsonwebtoken.security.Keys;
 public class SecurityFilter implements ContainerRequestFilter {
 	private static final String AUTHORIZATION_PREFIX = "Bearer ";
 	public static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+	private MyLogger logger;
+	
+	public SecurityFilter() {
+		this.logger = new MyLogger(this.getClass().getSimpleName());
+	}
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -44,13 +50,19 @@ public class SecurityFilter implements ContainerRequestFilter {
 	}
 
 	private boolean isHeaderValid(String authorizationHeader) {
-		return authorizationHeader != null
-				&& authorizationHeader.toLowerCase().startsWith(AUTHORIZATION_PREFIX.toLowerCase());
+		return authorizationHeader != null &&
+			   authorizationHeader.toLowerCase().startsWith(AUTHORIZATION_PREFIX.toLowerCase());
 	}
 
 	private void abortWithUnauthorized(ContainerRequestContext requestContext) {
+		this.logger.log(
+			MyLogger.ERROR,
+			"El usuario no puede acceder al recurso /" + requestContext.getUriInfo().getPath()
+			+ " (" + requestContext.getMethod() + ")"
+		);
 		requestContext.abortWith(
-				Response.status(Response.Status.UNAUTHORIZED).entity("El usuario no puede acceder al recurso").build());
+			Response.status(Response.Status.UNAUTHORIZED).entity("El usuario no puede acceder al recurso").build()
+		);
 	}
 
 	private UserBean validateToken(String token) throws Exception {

@@ -29,10 +29,14 @@ select * from dbo.services
 SELECT * 
   FROM users.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
-
-----------------------------------------------------------------------------------------------------------------
-execute dbo.get_services_to_crawl
 go
+----------------------------------------------------------------------------------------------------------------
+
+-- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
+-- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
+
+--execute dbo.get_services
+
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER SERVICIOS DE USUARIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_services_user
 (

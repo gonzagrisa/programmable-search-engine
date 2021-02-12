@@ -253,10 +253,38 @@ CREATE or ALTER PROCEDURE dbo.set_website_down
 AS
 BEGIN
 	IF EXISTS (SELECT 1 from dbo.websites where website_id = @website_id)
+    BEGIN
+		update dbo.websites
+		set isUp = 0,
+			reindex = 0,
+			indexed = 0
+		where website_id = @website_id
+	END
+	ELSE
+	BEGIN
+		raiserror('Pagina inexistente',16,1)
+	END
+	SELECT @affectedRows = @@ROWCOUNT;
+END
+GO
+
+-- execute dbo.set_website_down 4
+
+-------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
+CREATE OR ALTER PROCEDURE dbo.update_website
+(
+	@website_id	INT,
+	@url		VARCHAR(500),
+	@affectedRows INT OUTPUT
+)
+AS
+BEGIN
+	IF EXISTS (SELECT 1 from dbo.websites where website_id = @website_id)
 	BEGIN
 		update dbo.websites
 		set isUp = 0,
 			reindex = 1,
+			url = @url,
 			indexed = 0
 		where website_id = @website_id
 	END
