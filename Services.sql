@@ -50,11 +50,23 @@ BEGIN
 END
 GO
 
-execute dbo.get_services_user 3
+-------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
+CREATE OR ALTER PROCEDURE dbo.clean_service_pages
+(
+	@service_id INT
+)
+as
+begin
+	update dbo.websites
+		set isActive = 0,
+			reindex = 0,
+			indexed = 0,
+			index_date = null
+	where service_id = @service_id
+end
+GO
 
 
-
-go
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.insert_service
 (
@@ -65,14 +77,22 @@ CREATE OR ALTER PROCEDURE dbo.insert_service
 )
 AS
 BEGIN
-	insert into dbo.services(user_id, url_resource, url_ping, protocol)
-	values	(@user_id, @url_resource, @url_ping, @protocol)
+	IF EXISTS (SELECT 1 from dbo.services where url_resource = @url_resource and user_id = @user_id and isActive = 0)
+	BEGIN
+		update dbo.services
+			set isActive = 1,
+				reindex = 1,
+				indexed = 0,
+				index_date = null
+			where url_resource = @url_resource and user_id = @user_id
+	END
+	ELSE
+	BEGIN
+		insert into dbo.services(user_id, url_resource, url_ping, protocol)
+		values	(@user_id, @url_resource, @url_ping, @protocol)
+	END
 END
 GO
-
-execute dbo.insert_service 2, 'http://desktop-a0iuvm3:8088/asdad', 'http://desktop-a0iuvm3:8088/asdad1', 'REST'
-
-select * from dbo.services
 
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
@@ -97,7 +117,6 @@ BEGIN
 END
 GO
 
-execute dbo.get_services_to_crawl
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER EL LISTADO DE SERVICIOS (CRAWLER) --------------------------
 CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
@@ -164,26 +183,31 @@ BEGIN
 END
 GO
 
-select * from dbo.websites
-
-
-select * from dbo.services
-
-execute delete_service 1
 -------------------------- PROCEDIMIENTO ALMACENADO PARA OBTENER TODAS LAS PAGINAS REGISTRADAS DE UN SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_service_websites
 (
-	@service_id	INT
+	@service_id	 INT,
+	@get_indexed BIT
 )
 AS
 BEGIN
-	select * 
-		from dbo.websites
-		where service_id = @service_id
+	IF (@get_indexed = 1)
+	BEGIN
+		select * 
+			from dbo.websites
+			where service_id = @service_id
+			AND	  indexed = 1
+	END
+	ELSE
+	BEGIN
+		select * 
+			from dbo.websites
+			where service_id = @service_id
+	END
 END
 GO
 
-execute dbo.get_service_websites 1
+
 
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url_resource, ',')
@@ -200,3 +224,27 @@ values	(1, 'youtube0.com/0','youtube0.com/ping', 'REST', 0),
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
+
+
+
+-- TESTING REINDEX, ETC
+select * from dbo.services
+update dbo.services
+	set indexed = 1,
+		reindex = 0,
+		isActive = 1
+
+select * from dbo.websites
+
+update dbo.websites
+	set indexed = 1,
+		reindex = 0,
+		isActive = 1
+
+
+select * from dbo.websites
+update dbo.websites
+	set indexed = 1,
+		service_id = 1,
+		reindex = 0,
+		isActive = 1

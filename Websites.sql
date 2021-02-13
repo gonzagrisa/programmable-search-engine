@@ -104,25 +104,37 @@ CREATE OR ALTER PROCEDURE dbo.new_website_from_service
 (
 	@user_id	INT,
 	@url		VARCHAR(500),
-	@service_id INT,
-	@affectedRows INT OUTPUT
+	@service_id INT
 )
 as
 begin
-	-- si existe una página igual se actualiza
+	-- si ya existe un dominio con el mismo servicio y mismo dominio, usar ese
 	IF EXISTS(
 		SELECT 1
 		from dbo.websites
 		where user_id = @user_id
 		AND dbo.get_domain(url) = dbo.get_domain(@url)
+		AND (service_id = @service_id OR (service_id is null and indexed = 0))
 	)
 	BEGIN
 		update dbo.websites
 			set reindex = 1,
 				indexed = 0,
 				isActive = 1,
+				index_date = null,
 				service_id = @service_id
 			where dbo.get_domain(url) = dbo.get_domain(@url)
+			AND	  user_id = @user_id
+	END
+	-- si ya existe un dominio con el mismo dominio pero que fue insertado a mano y esta indexado o fue insertado desde otro servicio, no insertarlo
+	ELSE IF EXISTS( SELECT 1
+				from dbo.websites
+				where user_id = @user_id
+				AND dbo.get_domain(url) = dbo.get_domain(@url)
+				AND (service_id != @service_id OR service_id IS NULL))
+	BEGIN
+		PRINT 'PAGINA NO INSERTADA'
+		return
 	END
 	ELSE
 	BEGIN
@@ -130,7 +142,6 @@ begin
 		insert into dbo.websites(user_id, url, service_id)
 		values	(@user_id, @url, @service_id)
 	END
-	SELECT @affectedRows = @@ROWCOUNT;
 END
 GO
 
@@ -159,7 +170,12 @@ BEGIN
 	SELECT @affectedRows = @@ROWCOUNT;
 END
 GO
+select * from dbo.websites
+select * from dbo.services
 
+declare @out int
+execute insert_website 2, 'https://stackoverflow.com', @out output
+go
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.delete_website
 (
@@ -171,7 +187,10 @@ BEGIN
 	if exists(SELECT * from dbo.websites w where w.website_id = @website_id)
 	BEGIN
 		update w
-			set isActive = 0
+			set isActive = 0,
+				indexed = 0,
+				reindex = 0,
+				index_date = null
 		from dbo.websites w
 		where w.website_id = @website_id
 	END
@@ -183,18 +202,28 @@ BEGIN
 END
 GO
 
--------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
-CREATE OR ALTER PROCEDURE dbo.clean_service_pages
+-------------------------- PROCEDIMIENTO ALMACENADO PARA DESVINCULAR PAGINA DE SERVICIO --------------------------
+CREATE OR ALTER PROCEDURE dbo.unlink_website_service
 (
-	@service_id INT
+	@website_id		INT,
+	@affectedRows	INT OUTPUT
 )
-as
-begin
-	delete
-	from dbo.websites
-	where service_id = @service_id
-end
-go
+AS
+BEGIN
+	if exists(SELECT * from dbo.websites w where w.website_id = @website_id)
+	BEGIN
+		update w
+			set service_id = null
+		from dbo.websites w
+		where w.website_id = @website_id
+	END
+	ELSE
+	BEGIN
+		raiserror ('La operacion no se pudo realizar porque la pagina o el usuario no existen',16,1)
+	END
+	SELECT @affectedRows = @@ROWCOUNT;
+END
+GO
 
 -------------------------- FUNCION PARA OBTENER EL DOMINIO DE UNA URL --------------------------
 CREATE or ALTER FUNCTION dbo.get_domain (@url VARCHAR(500))
@@ -344,6 +373,27 @@ BEGIN
 END
 GO
 
+CREATE OR ALTER PROCEDURE dbo.get_service_website_indexed
+(
+	@url		VARCHAR(500),
+	@service_id	INT
+)
+AS
+BEGIN
+	select * from dbo.websites
+		where dbo.get_domain(url) = dbo.get_domain(@url)
+		and service_id = @service_id
+		and indexed = 1
+END
+GO
+
+select * from dbo.websites
+
+update dbo.websites
+	set indexed = 1
+	where website_id = 35
+
+execute dbo.get_service_website_indexed 'https://github.com', 1
 
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
@@ -421,3 +471,7 @@ execute dbo.new_website 2, 'https://www.geeksforgeeks.org/'
 execute dbo.new_website 2, 'https://www.mercadolibre.com'
 execute dbo.new_website 2, 'https://www.mercadolibre.com'
 go
+
+
+select * from dbo.services
+select * from dbo.websites
