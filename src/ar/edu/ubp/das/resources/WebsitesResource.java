@@ -178,7 +178,7 @@ public class WebsitesResource {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.deleteWebsiteId(website.getWebsiteId());
 			dao.delete(website.getWebsiteId());
-			this.logger.log(MyLogger.INFO, "Eliminación de página exitosa");
+			this.logger.log(MyLogger.INFO, "Eliminacion de pagina exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
 			this.logger.log(MyLogger.ERROR, "Eliminación de página con error: " + e.getMessage());

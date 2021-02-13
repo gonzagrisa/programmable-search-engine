@@ -16,6 +16,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -106,7 +107,7 @@ public class ServicesResource {
 			this.checkBody(service);
 			checkResource(service);
 			service.setUserId((Integer) req.getProperty("id"));
-			this.deleteServiceWebsites(id);
+			this.deleteServiceWebsites(service);
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			service.setServiceId(id);
 			dao.update(service);
@@ -122,19 +123,19 @@ public class ServicesResource {
 	}
 
 	@PUT
-	@Path("{serviceId}/reindex")
+	@Path("reindex")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response reindexService(@PathParam("serviceId") Integer id) {
+	public Response reindexService(ServiceBean service) {
 		try {
-			this.deleteServiceWebsites(id);
-			this.getDao().update(id);;
-			this.logger.log(MyLogger.INFO, "Petición de reindexado para el servicio #" + id + " exitosa");
+			this.deleteServiceWebsites(service);
+			this.getDao().update(service.getServiceId());
+			this.logger.log(MyLogger.INFO, "Petición de reindexado para el servicio #" + service.getServiceId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			this.logger.log(
 				MyLogger.ERROR,
-				"Petición de reindexado para el servicio #" + id + " con error: " + e.getMessage()
+				"Petición de reindexado para el servicio #" + service.getServiceId() + " con error: " + e.getMessage()
 			);
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
@@ -144,16 +145,20 @@ public class ServicesResource {
 	@Path("{serviceId}")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteService(@PathParam("serviceId") Integer id) {
+	public Response deleteService(ServiceBean service, @PathParam("serviceId") Integer id, @QueryParam("keepWebsites") Boolean keepWebsites) {
 		try {
-			this.deleteServiceWebsites(id);
+			if (keepWebsites) {
+				this.unlinkWebsites(service);
+			} else {
+				this.deleteServiceWebsites(service);
+			}
 			this.getDao().delete(id);
-			this.logger.log(MyLogger.INFO, "Eliminación de servicio #" + id + " exitosa");
+			this.logger.log(MyLogger.INFO, "Eliminacion de servicio #" + id + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			this.logger.log(
 				MyLogger.ERROR,
-				"Eliminación del servicio #" + id + " con error: " + e.getMessage()
+				"Eliminacion del servicio #" + id + " con error: " + e.getMessage()
 			);
 			return Response.status(Status.BAD_REQUEST).build();
 		}
@@ -174,12 +179,22 @@ public class ServicesResource {
 	}
 
 	
-	private void deleteServiceWebsites(Integer serviceId) throws ElasticsearchException, Exception {
-		Dao<WebsiteBean, ServiceBean> dao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
-		MetadataDao elastic = new MetadataDaoImpl();
-		List<WebsiteBean> websites = dao.select(serviceId);
+	private void unlinkWebsites(ServiceBean service) throws SQLException {
+		Dao<WebsiteBean, ServiceBean> serviceWebsiteDao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
+		Dao<WebsiteBean, WebsiteBean> websiteDao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
+		List<WebsiteBean> websites = serviceWebsiteDao.select(service.getServiceId());
 		for (WebsiteBean website : websites) {
-			System.out.println("deleting ID:" + website.getWebsiteId());
+			websiteDao.update(website, null);
+		}
+	}
+	
+	private void deleteServiceWebsites(ServiceBean service) throws ElasticsearchException, Exception {
+		Dao<WebsiteBean, ServiceBean> serviceWebsiteDao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
+		Dao<WebsiteBean, WebsiteBean> websiteDao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
+		MetadataDao elastic = new MetadataDaoImpl();
+		List<WebsiteBean> websites = serviceWebsiteDao.select(service);
+		for (WebsiteBean website : websites) {
+			websiteDao.delete(website.getWebsiteId());
 			elastic.deleteWebsiteId(website.getWebsiteId());
 		}
 	}

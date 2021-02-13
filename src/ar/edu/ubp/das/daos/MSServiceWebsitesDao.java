@@ -24,8 +24,9 @@ public class MSServiceWebsitesDao extends Dao<WebsiteBean, ServiceBean> {
 	public List<WebsiteBean> select(Integer serviceId) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.get_service_websites(?)");
+			this.setProcedure("dbo.get_service_websites(?,?)");
 			this.setParameter(1, serviceId);
+			this.setParameter(2, true);
 			return this.executeQuery();
 		} finally {
 			this.close();
@@ -36,8 +37,9 @@ public class MSServiceWebsitesDao extends Dao<WebsiteBean, ServiceBean> {
 	public List<WebsiteBean> select(ServiceBean service) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.get_service_websites(?)");
+			this.setProcedure("dbo.get_service_websites(?,?)");
 			this.setParameter(1, service.getServiceId());
+			this.setParameter(2, false);
 			return this.executeQuery();
 		} finally {
 			this.close();
