@@ -275,13 +275,34 @@ public class UsersResource {
 		}
 	}
 
-	// y esto?
+	// un usuario borra su propia cuenta
 	@DELETE
 	@Secured
-	public Response deleteUser(UserBean user) {
-		return Response.ok().build();
+	@Path("me")
+	public Response deleteUser() {
+		try {
+			Dao<UserBean, UserBean> dao = this.getDao();
+			dao.delete((Integer) request.getProperty("id"));
+			this.logger.log(MyLogger.INFO, "Eliminación propia de usuario exitosa");
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (SQLException e) {
+			this.logger.log(
+				MyLogger.ERROR,
+				"Eliminación propia de usuario con error: "
+				+ e.getMessage()
+			);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		} catch (Exception e) {
+			this.logger.log(
+				MyLogger.ERROR,
+				"Eliminación propia de usuario con error: "
+				+ e.getMessage()
+			);
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
 	}
 	
+	// el admin le borra la cuenta a un usuario
 	@DELETE
 	@Secured
 	@Path("{id}")
