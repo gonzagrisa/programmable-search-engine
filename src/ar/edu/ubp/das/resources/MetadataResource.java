@@ -12,7 +12,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import ar.edu.ubp.das.elastic.Metadata;
+import ar.edu.ubp.das.beans.MetadataBean;
 import ar.edu.ubp.das.elastic.MetadataDao;
 import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 import ar.edu.ubp.das.logging.MyLogger;
@@ -42,7 +42,7 @@ public class MetadataResource {
 	public Response getMetadata() {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
-			List<Metadata> metadata = elastic.get((Integer) req.getProperty("id"));
+			List<MetadataBean> metadata = elastic.get((Integer) req.getProperty("id"));
 			this.logger.log(MyLogger.INFO, "PeticiÃ³n de metadatos exitosa");
 			return Response.status(Status.OK).entity(metadata).build();
 		} catch (Exception e) {
@@ -58,15 +58,32 @@ public class MetadataResource {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.delete(id);
+			this.logger.log(MyLogger.INFO, "Metadato id: " + id + " eliminado exitosamente");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+	
+	@DELETE
+	@Secured
+	@Path("/selected")
+	public Response deleteSelected(List<MetadataBean> metadataList) {
+		if (metadataList.size() == 0) {
+			return Response.status(Status.BAD_REQUEST).entity("La petición no rellena los requisitos").build();
+		}
+		try {
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteBatch(metadataList);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
 
 	@PUT
 	@Secured
-	public Response updateMetadata(Metadata metadata) {
+	public Response updateMetadata(MetadataBean metadata) {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.update(metadata);
@@ -80,5 +97,20 @@ public class MetadataResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
+	
+	@PUT
+	@Secured
+	@Path("/selected")
+	public Response updateSelected(List<MetadataBean> metadataList) {
+		if (metadataList.size() == 0) {
+			return Response.status(Status.BAD_REQUEST).entity("La petición no rellena los requisitos").build();
+		}
+		try {
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.updateBatch(metadataList);
+			return Response.status(Status.NO_CONTENT).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
 }

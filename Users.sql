@@ -28,6 +28,7 @@ CREATE TABLE dbo.preferences
 	color			VARCHAR(50)		NOT NULL,
 	icon_url		VARCHAR(500)	NOT NULL,
 	border_radius	INT				NOT NULL,
+	placehoder		VARCHAR(100)	NOT NULL,
 	font_size		TINYINT			NOT NULL,
 	constraint PK__preferences__END primary key (user_id),
 	constraint FK__preferences__users__END foreign key (user_id) references dbo.users on delete cascade

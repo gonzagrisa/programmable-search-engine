@@ -144,6 +144,10 @@ begin
 	END
 END
 GO
+select * from dbo.services
+select * from dbo.websites
+
+execute dbo.new_website_from_service 2, 'https://youtube.com',1
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.update_website
@@ -474,4 +478,14 @@ go
 
 
 select * from dbo.services
-select * from dbo.websites
+update dbo.services
+	set indexed = 0,
+		reindex = 1,
+		index_date = null,
+		isUp = 1
+
+declare @out Int
+execute dbo.insert_website 2, 'http://infobae.com', @out output
+
+select * from dbo.services
+DBCC CHECKIDENT ('websites', RESEED, 0);

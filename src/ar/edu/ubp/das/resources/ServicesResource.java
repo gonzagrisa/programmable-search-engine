@@ -109,6 +109,7 @@ public class ServicesResource {
 			service.setUserId((Integer) req.getProperty("id"));
 			this.deleteServiceWebsites(service);
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
+			System.out.println("ACTUALIZANDO SERVICIO");
 			service.setServiceId(id);
 			dao.update(service);
 			this.logger.log(MyLogger.INFO, "Actualización de servicio #" + service.getServiceId() + " exitosa");

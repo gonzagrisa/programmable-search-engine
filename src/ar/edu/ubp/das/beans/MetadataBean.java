@@ -1,8 +1,8 @@
-package ar.edu.ubp.das.elastic;
+package ar.edu.ubp.das.beans;
 
 import java.util.List;
 
-public class Metadata {
+public class MetadataBean {
 	private String id;
 	private Integer userId;
 	private Integer websiteId;
@@ -16,7 +16,16 @@ public class Metadata {
 	private Integer popularity;
 	private List<String> topWords;
 	private String[] tags;
-	
+	private String[] filters;
+
+	public String[] getFilters() {
+		return filters;
+	}
+
+	public void setFilters(String[] filters) {
+		this.filters = filters;
+	}
+
 	public String[] getTags() {
 		return tags;
 	}

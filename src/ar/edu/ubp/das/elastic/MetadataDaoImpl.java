@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -28,18 +30,23 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 
 import com.google.gson.Gson;
 
+import ar.edu.ubp.das.beans.MetadataBean;
+import ar.edu.ubp.das.logging.MyLogger;
+
 public class MetadataDaoImpl implements MetadataDao {
 	RestHighLevelClient client;
 	static final String INDEX = "metadata";
 	static final String REFRESH_POLICY = "wait_for";
+	private MyLogger logger;
 
 	public MetadataDaoImpl() {
+		this.logger = new MyLogger(this.getClass().getSimpleName());
 		this.client = new RestHighLevelClient(
 				RestClient.builder(new HttpHost("localhost", 9200, "http"), new HttpHost("localhost", 9201, "http")));
 	}
 
 	@Override
-	public List<Metadata> get(Integer id) throws ElasticsearchException, Exception {
+	public List<MetadataBean> get(Integer id) throws ElasticsearchException, Exception {
 		/*
 		 * Otra forma: MatchQueryBuilder userId = QueryBuilders.matchQuery("userId",
 		 * id); MatchQueryBuilder notApproved = QueryBuilders.matchQuery("approved",
@@ -61,13 +68,13 @@ public class MetadataDaoImpl implements MetadataDao {
 		searchRequest.source(sourceBuilder);
 
 		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-		List<Metadata> metadataList = new ArrayList<Metadata>();
-		Metadata metadata;
+		List<MetadataBean> metadataList = new ArrayList<MetadataBean>();
+		MetadataBean metadata;
 		Gson gson = new Gson();
 		System.out.println("Hit count: " + searchResponse.getHits().getTotalHits());
 		for (SearchHit hit : searchResponse.getHits().getHits()) {
-			metadata = new Metadata();
-			metadata = gson.fromJson(hit.getSourceAsString(), Metadata.class);
+			metadata = new MetadataBean();
+			metadata = gson.fromJson(hit.getSourceAsString(), MetadataBean.class);
 			metadata.setId(hit.getId());
 			try {
 				Text[] fragments = hit.getHighlightFields().get("text").fragments();
@@ -81,20 +88,36 @@ public class MetadataDaoImpl implements MetadataDao {
 	}
 
 	@Override
-	public Metadata getId(String id) {
+	public MetadataBean getId(String id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void update(Metadata meta) throws IOException {
+	public void update(MetadataBean meta) throws IOException {
 		UpdateRequest request = new UpdateRequest(INDEX, meta.getId())
 				.doc("approved", true,
 					 "title", meta.getTitle(),
 					 "tags", meta.getTags())
 				.setRefreshPolicy(REFRESH_POLICY);
 		UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
-		System.out.println(updateResponse.status().toString());
+		logger.log(MyLogger.INFO, "Metadato " + meta.getId()  +" actualizado. Respuesta: " + updateResponse.status().toString());
+	}
+	
+	@Override
+	public void updateBatch(List<MetadataBean> metadataList) throws ElasticsearchException, Exception {
+		BulkRequest request = new BulkRequest();
+		for (MetadataBean metadata : metadataList) {
+			request.add(new UpdateRequest(INDEX, metadata.getId()).doc(
+						"approved", true,
+						"title", metadata.getTitle(),
+						"tags", metadata.getTags(),
+						"filters", metadata.getFilters()
+					));
+		}
+		request.setRefreshPolicy(REFRESH_POLICY);
+		BulkResponse bulkResponse = client.bulk(request, RequestOptions.DEFAULT);
+		logger.log(MyLogger.INFO, "Metadatos actualizados. Respuesta: " + bulkResponse.status().toString());
 	}
 
 	@Override
@@ -102,7 +125,7 @@ public class MetadataDaoImpl implements MetadataDao {
 		DeleteRequest request = new DeleteRequest(INDEX, id);
 		request.setRefreshPolicy(REFRESH_POLICY);
 		DeleteResponse deleteResponse = client.delete(request, RequestOptions.DEFAULT);
-		System.out.println(deleteResponse.status().toString());
+		logger.log(MyLogger.INFO, "Metadatos eliminados. Respuesta: " + deleteResponse.status().toString());
 	}
 
 	@Override
@@ -113,14 +136,31 @@ public class MetadataDaoImpl implements MetadataDao {
 		ActionListener<BulkByScrollResponse> listener = new ActionListener<BulkByScrollResponse>() {
 		    @Override
 		    public void onResponse(BulkByScrollResponse bulkResponse) {
-		        // TODO: Log
-		    	System.out.println("Metadatos Actualizados");
+		    	logger.log(MyLogger.INFO, "Metadatos generados a partir de pagina con id " + id + " eliminados");
 		    }
 		    @Override
 		    public void onFailure(Exception e) {
-		        // TODO: Log
+		    	logger.log(MyLogger.ERROR, "Error al eliminar Metadatos de pagina id: " + id + " . Error: " + e.getMessage());
 		    }
 		};
 		client.deleteByQueryAsync(request, RequestOptions.DEFAULT, listener);
+	}
+
+	@Override
+	public void deleteBatch(List<MetadataBean> metadataList) throws ElasticsearchException, Exception {
+		BulkRequest request = new BulkRequest();
+		for (MetadataBean metadata : metadataList) {
+			request.add(new DeleteRequest(INDEX, metadata.getId()));
+		}
+		client.bulkAsync(request, RequestOptions.DEFAULT, new ActionListener<BulkResponse>() {
+		    @Override
+		    public void onResponse(BulkResponse bulkResponse) {
+		    	logger.log(MyLogger.INFO, "Metadatos eliminados");
+		    }
+		    @Override
+		    public void onFailure(Exception e) {
+		    	logger.log(MyLogger.ERROR, "Error al eliminar los Metadatos. Error: " + e.getMessage());
+		    }
+		});
 	}
 }

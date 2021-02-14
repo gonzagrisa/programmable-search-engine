@@ -1,16 +1,21 @@
 package ar.edu.ubp.das.resources;
 
+import java.io.File;
 import java.sql.SQLException;
+import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.glassfish.jersey.media.multipart.ContentDisposition;
 
 import ar.edu.ubp.das.beans.PreferencesBean;
 import ar.edu.ubp.das.db.Dao;
@@ -48,6 +53,24 @@ public class PreferencesResource {
 			this.logger.log(MyLogger.ERROR, "Petición de preferencias con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
+	}
+	
+	@GET
+	@Path("file")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getFile() {
+		//@Produces("application/zip")
+		File f = new File("crawling.rar");
+
+	    if (!f.exists()) {
+	        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+	    }
+
+	    ContentDisposition contentDisposition = ContentDisposition.type("attachment")
+	    	    .fileName("filename.zip").creationDate(new Date()).build();
+
+	    return Response.status(Status.OK).entity(f)
+	    		.header("Content-Disposition", contentDisposition).build();
 	}
 
 	@PUT
