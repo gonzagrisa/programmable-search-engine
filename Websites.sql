@@ -114,7 +114,7 @@ begin
 		from dbo.websites
 		where user_id = @user_id
 		AND dbo.get_domain(url) = dbo.get_domain(@url)
-		AND (service_id = @service_id OR (service_id is null and indexed = 0))
+		AND (service_id = @service_id OR (service_id is null and indexed = 0) OR isActive = 0)
 	)
 	BEGIN
 		update dbo.websites
@@ -131,7 +131,9 @@ begin
 				from dbo.websites
 				where user_id = @user_id
 				AND dbo.get_domain(url) = dbo.get_domain(@url)
-				AND (service_id != @service_id OR service_id IS NULL))
+				AND indexed = 1
+				AND isActive = 1
+				AND (service_id != @service_id OR service_id IS NULL))   --- AGREGAR EL TENER EL CUENTA QUE EL SERVICIO CON EL QUE SE LA AGREGO PUEDE ESTAR ELIMINADO (IS ACTIVE 0)
 	BEGIN
 		PRINT 'PAGINA NO INSERTADA'
 		return
@@ -144,6 +146,9 @@ begin
 	END
 END
 GO
+
+
+
 select * from dbo.services
 select * from dbo.websites
 
@@ -367,13 +372,15 @@ BEGIN
 	join (SELECT
 			service_id,
 			COUNT(*) AS count,
-			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1 THEN 1 ELSE 0 END) > 0
+			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1  AND isActive = 1 THEN 1 ELSE 0 END) > 0
 					THEN 0 ELSE 1 END AS result
 			FROM dbo.websites
 			WHERE service_id IS NOT NULL
 			GROUP BY service_id) as aux
 	on s.service_id = aux.service_id
 	where result = 1
+	and   isActive = 1
+	and   indexed = 0
 END
 GO
 
@@ -398,10 +405,27 @@ update dbo.websites
 	where website_id = 35
 
 execute dbo.get_service_website_indexed 'https://github.com', 1
+go
 
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+select *
+	from dbo.services s
+	join (SELECT
+			service_id,
+			COUNT(*) AS count,
+			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1  AND isActive = 1 THEN 1 ELSE 0 END) > 0
+					THEN 0 ELSE 1 END AS result
+			FROM dbo.websites
+			WHERE service_id IS NOT NULL
+			GROUP BY service_id) as aux
+	on s.service_id = aux.service_id
+	where result = 1
+	and   isActive = 1
+	and   indexed = 0
+go
+
 select *
 	from dbo.services s
 	join (SELECT
@@ -415,6 +439,15 @@ select *
 	on s.service_id = aux.service_id
 	where result = 1
 go
+
+
+select * from dbo.services
+select * from dbo.websites
+
+update dbo.websites
+	set indexed = 1
+	where website_id = 2
+	and website_id = 3
 
 /*
 DEPRECADO: SE USABA PARA ACTUALIZAR EL SERVICIO COMO INDEXADO = 0 SI ALGUNA DE LAS PAGINAS QUE SALIERON DE ESE SERVICIO SE PONIA A REINDEXAR
@@ -489,3 +522,13 @@ execute dbo.insert_website 2, 'http://infobae.com', @out output
 
 select * from dbo.services
 DBCC CHECKIDENT ('websites', RESEED, 0);
+
+
+select * from dbo.websites
+select * from dbo.services
+
+select * from
+	dbo.websites w join
+	dbo.services s
+	on w.service_id = s.service_id
+	where s.isActive = 1

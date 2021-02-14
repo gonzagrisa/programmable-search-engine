@@ -248,3 +248,9 @@ update dbo.websites
 		service_id = 1,
 		reindex = 0,
 		isActive = 1
+
+select * from dbo.services
+
+select * from dbo.users
+
+select * from dbo.websites
