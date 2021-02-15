@@ -8,6 +8,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
 
 import ar.edu.ubp.das.beans.PreferencesBean;
+import ar.edu.ubp.das.beans.UserBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.logging.MyLogger;
@@ -52,6 +54,20 @@ public class PreferencesResource {
 		} catch (SQLException e) {
 			this.logger.log(MyLogger.ERROR, "Petición de preferencias con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
+	
+	@GET
+	@Path("{token}")
+	public Response getPreferencesToken(@PathParam("token") String token) {
+		try {
+			System.out.println(token);
+			Dao<UserBean, String> daoToken = DaoFactory.getDao("UserToken", "ar.edu.ubp.das");
+			Dao<UserBean, String> daoPref = DaoFactory.getDao("Preferences", "ar.edu.ubp.das");
+			UserBean user = daoToken.find(token);
+			return Response.status(Status.OK).entity(daoPref.find(user.getUserId())).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 	

@@ -25,10 +25,12 @@ public class MSPreferencesDao extends Dao<PreferencesBean, PreferencesBean>{
 	public PreferencesBean make(ResultSet result) throws SQLException {
 		PreferencesBean pref = new PreferencesBean();
 		pref.setUserId(result.getInt("user_id"));
-		pref.setColor(result.getString("color"));
-		pref.setIconURL(result.getString("icon_url"));
+		pref.setBorderWidth(result.getDouble("border_width"));
 		pref.setBorderRadius(result.getInt("border_radius"));
-		pref.setFontSize(result.getInt("font_size"));
+		pref.setIconURL(result.getString("icon_url"));
+		pref.setIconSize(result.getInt("icon_size"));
+		pref.setPlaceholder(result.getString("placeholder"));
+		pref.setColor(result.getString("color"));
 		return pref;
 	}
 
@@ -36,12 +38,14 @@ public class MSPreferencesDao extends Dao<PreferencesBean, PreferencesBean>{
 	public void update(PreferencesBean pref) throws SQLException {
 		try {
 			this.connect();
-			this.setProcedure("dbo.update_preferences(?,?,?,?,?)");
+			this.setProcedure("dbo.update_preferences(?,?,?,?,?,?,?)");
 			this.setParameter(1, pref.getUserId());
-			this.setParameter(2, pref.getColor());
-			this.setParameter(3, pref.getIconURL());
-			this.setParameter(4, pref.getBorderRadius());
-			this.setParameter(5, pref.getFontSize());
+			this.setParameter(2, pref.getBorderWidth());
+			this.setParameter(3, pref.getBorderRadius());
+			this.setParameter(4, pref.getIconURL());
+			this.setParameter(5, pref.getIconSize());
+			this.setParameter(6, pref.getPlaceholder());
+			this.setParameter(7, pref.getColor());
 			if (this.executeUpdate() == 0)
 				throw new SQLException("La preferencia a actualizar no existe.");
 		} finally {

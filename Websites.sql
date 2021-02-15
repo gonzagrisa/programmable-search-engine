@@ -108,7 +108,7 @@ CREATE OR ALTER PROCEDURE dbo.new_website_from_service
 )
 as
 begin
-	-- si ya existe un dominio con el mismo servicio y mismo dominio, usar ese
+	-- si ya existe un dominio con el mismo servicio y mismo dominio o sin importar el servicio al cual pertenecia, si isActive = 0 , usar ese
 	IF EXISTS(
 		SELECT 1
 		from dbo.websites
@@ -367,7 +367,8 @@ FOR update
 AS
 BEGIN
 	update dbo.services
-		set indexed = 1
+		set indexed = 1,
+			index_date = CAST(GetDate() AS smalldatetime)
 	from dbo.services s
 	join (SELECT
 			service_id,
@@ -383,6 +384,13 @@ BEGIN
 	and   indexed = 0
 END
 GO
+
+
+
+select * from dbo.websites
+
+update dbo.services
+	set reindex = 1 where service_id = 33
 
 CREATE OR ALTER PROCEDURE dbo.get_service_website_indexed
 (

@@ -19,6 +19,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
@@ -27,10 +28,12 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 import com.google.gson.Gson;
 
 import ar.edu.ubp.das.beans.MetadataBean;
+import ar.edu.ubp.das.beans.SearchBean;
 import ar.edu.ubp.das.logging.MyLogger;
 
 public class MetadataDaoImpl implements MetadataDao {
@@ -96,24 +99,19 @@ public class MetadataDaoImpl implements MetadataDao {
 	@Override
 	public void update(MetadataBean meta) throws IOException {
 		UpdateRequest request = new UpdateRequest(INDEX, meta.getId())
-				.doc("approved", true,
-					 "title", meta.getTitle(),
-					 "tags", meta.getTags())
+				.doc("approved", true, "title", meta.getTitle(), "tags", meta.getTags())
 				.setRefreshPolicy(REFRESH_POLICY);
 		UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
-		logger.log(MyLogger.INFO, "Metadato " + meta.getId()  +" actualizado. Respuesta: " + updateResponse.status().toString());
+		logger.log(MyLogger.INFO,
+				"Metadato " + meta.getId() + " actualizado. Respuesta: " + updateResponse.status().toString());
 	}
-	
+
 	@Override
 	public void updateBatch(List<MetadataBean> metadataList) throws ElasticsearchException, Exception {
 		BulkRequest request = new BulkRequest();
 		for (MetadataBean metadata : metadataList) {
-			request.add(new UpdateRequest(INDEX, metadata.getId()).doc(
-						"approved", true,
-						"title", metadata.getTitle(),
-						"tags", metadata.getTags(),
-						"filters", metadata.getFilters()
-					));
+			request.add(new UpdateRequest(INDEX, metadata.getId()).doc("approved", true, "title", metadata.getTitle(),
+					"tags", metadata.getTags(), "filters", metadata.getFilters()));
 		}
 		request.setRefreshPolicy(REFRESH_POLICY);
 		BulkResponse bulkResponse = client.bulk(request, RequestOptions.DEFAULT);
@@ -134,14 +132,16 @@ public class MetadataDaoImpl implements MetadataDao {
 		request.setQuery(new TermQueryBuilder("websiteId", id));
 		request.setRefresh(true);
 		ActionListener<BulkByScrollResponse> listener = new ActionListener<BulkByScrollResponse>() {
-		    @Override
-		    public void onResponse(BulkByScrollResponse bulkResponse) {
-		    	logger.log(MyLogger.INFO, "Metadatos generados a partir de pagina con id " + id + " eliminados");
-		    }
-		    @Override
-		    public void onFailure(Exception e) {
-		    	logger.log(MyLogger.ERROR, "Error al eliminar Metadatos de pagina id: " + id + " . Error: " + e.getMessage());
-		    }
+			@Override
+			public void onResponse(BulkByScrollResponse bulkResponse) {
+				logger.log(MyLogger.INFO, "Metadatos generados a partir de pagina con id " + id + " eliminados");
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				logger.log(MyLogger.ERROR,
+						"Error al eliminar Metadatos de pagina id: " + id + " . Error: " + e.getMessage());
+			}
 		};
 		client.deleteByQueryAsync(request, RequestOptions.DEFAULT, listener);
 	}
@@ -153,14 +153,74 @@ public class MetadataDaoImpl implements MetadataDao {
 			request.add(new DeleteRequest(INDEX, metadata.getId()));
 		}
 		client.bulkAsync(request, RequestOptions.DEFAULT, new ActionListener<BulkResponse>() {
-		    @Override
-		    public void onResponse(BulkResponse bulkResponse) {
-		    	logger.log(MyLogger.INFO, "Metadatos eliminados");
-		    }
-		    @Override
-		    public void onFailure(Exception e) {
-		    	logger.log(MyLogger.ERROR, "Error al eliminar los Metadatos. Error: " + e.getMessage());
-		    }
+			@Override
+			public void onResponse(BulkResponse bulkResponse) {
+				logger.log(MyLogger.INFO, "Metadatos eliminados");
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				logger.log(MyLogger.ERROR, "Error al eliminar los Metadatos. Error: " + e.getMessage());
+			}
 		});
+	}
+
+	@Override
+	public List<MetadataBean> search(SearchBean search) throws ElasticsearchException, Exception {
+		QueryBuilder query;
+		System.out.println(search);
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+		System.out.println("LINE 172");
+		if (search.getType() != null) {
+			boolQueryBuilder.must(QueryBuilders.termQuery("type", search.getType()));
+		}
+		if (search.getDateFrom() != null) {
+			boolQueryBuilder.must(QueryBuilders.rangeQuery("date").gte(search.getDateFrom()));
+		}
+		if (search.getDateTo() != null) {
+			boolQueryBuilder.must(QueryBuilders.rangeQuery("date").lte(search.getDateTo()));
+		}
+		System.out.println("LINE 182");
+		boolQueryBuilder.must(QueryBuilders.termQuery("userId", search.getUserId()))
+				.must(QueryBuilders.termQuery("approved", true))
+				.should(QueryBuilders.multiMatchQuery(search.getQuery(), "tags", "text", "title", "URL")
+						.field("tags", 10).field("text", 1).field("title", 2))
+				.mustNot(QueryBuilders.matchQuery("filters", search.getQuery()));
+		query = boolQueryBuilder;
+		
+		HighlightBuilder highlightBuilder = new HighlightBuilder().preTags("<em>").postTags("</em>").fragmentSize(200)
+				.noMatchSize(200).field("text");
+		SearchRequest searchRequest = new SearchRequest(INDEX);
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(query);
+		sourceBuilder.highlighter(highlightBuilder);
+		sourceBuilder.trackTotalHits(true);
+		sourceBuilder.from((search.getPage() - 1) * 20).size(20);
+		if (search.getSort() != null) {
+			sourceBuilder.sort(search.getSort(), SortOrder.ASC);
+		}
+		String[] includeFields = new String[] {};
+		String[] excludeFields = new String[] { "text", "topWords", "approved", "extension", "filters", "tags" };
+		sourceBuilder.fetchSource(includeFields, excludeFields);
+		searchRequest.source(sourceBuilder);
+		
+		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+		List<MetadataBean> metadataList = new ArrayList<MetadataBean>();
+		MetadataBean metadata;
+		Gson gson = new Gson();
+		System.out.println("Hit count: " + searchResponse.getHits().getTotalHits());
+		for (SearchHit hit : searchResponse.getHits().getHits()) {
+			metadata = new MetadataBean();
+			metadata = gson.fromJson(hit.getSourceAsString(), MetadataBean.class);
+			metadata.setId(hit.getId());
+			try {
+				Text[] fragments = hit.getHighlightFields().get("text").fragments();
+				metadata.setText(fragments[0].string());
+			} catch (Exception e) {
+				System.out.println("No fragment text");
+			}
+			metadataList.add(metadata);
+		}
+		return metadataList;
 	}
 }

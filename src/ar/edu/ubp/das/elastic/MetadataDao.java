@@ -5,6 +5,7 @@ import java.util.List;
 import org.elasticsearch.ElasticsearchException;
 
 import ar.edu.ubp.das.beans.MetadataBean;
+import ar.edu.ubp.das.beans.SearchBean;
 
 public interface MetadataDao {
 	public List<MetadataBean> get(Integer id) throws ElasticsearchException, Exception;
@@ -14,4 +15,5 @@ public interface MetadataDao {
 	public void delete(String id) throws ElasticsearchException, Exception;
 	public void updateBatch(List<MetadataBean> metadataList) throws ElasticsearchException, Exception;
 	public void deleteBatch(List<MetadataBean> metadata) throws ElasticsearchException, Exception;
+	public List<MetadataBean> search(SearchBean search) throws ElasticsearchException, Exception;
 }

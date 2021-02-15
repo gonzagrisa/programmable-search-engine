@@ -14,24 +14,10 @@ CREATE TABLE dbo.users (
 	password	VARBINARY(32)		NOT NULL,
 	role		VARCHAR(20)			NOT NULL,
 	status		BIT					NOT NULL,
-	token_api	UNIQUEIDENTIFIER default NEWID() NULL,
+	token_api	UNIQUEIDENTIFIER	default NEWID(),
 	constraint PK__users__END primary key (user_id),
 	constraint UK__users__END unique (username),
 	constraint CK__users_role__END check (role in ('ADMIN', 'USER'))
-);
-go
-
--- ################## TABLA PREFERENCIAS ##################
-CREATE TABLE dbo.preferences
-(
-	user_id			INT				NOT NULL,
-	color			VARCHAR(50)		NOT NULL,
-	icon_url		VARCHAR(500)	NOT NULL,
-	border_radius	INT				NOT NULL,
-	placehoder		VARCHAR(100)	NOT NULL,
-	font_size		TINYINT			NOT NULL,
-	constraint PK__preferences__END primary key (user_id),
-	constraint FK__preferences__users__END foreign key (user_id) references dbo.users on delete cascade
 );
 go
 
@@ -139,18 +125,6 @@ execute dbo.new_user 'user2', 'user2', 'user14', 'secret'
 execute dbo.new_user 'user2', 'user2', 'user15', 'secret'
 go
 
--------------------------- TRIGGER PARA INSERTAR LAS OPCIONES POR DEFECTO AL NUEVO USUARIO CREADO --------------------------
-create trigger ti_users
-on dbo.users
-for insert
-as
-begin
-	declare @id INT
-	set @id = (select user_id from inserted)
-	insert into dbo.preferences(user_id, color, icon_url, border_radius, font_size)
-	values (@id, 'blue', 'https://cdn2.iconfinder.com/data/icons/font-awesome/1792/search-512.png', 50, 14)
-end
-go
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR INFORMACION USUARIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_user
@@ -209,40 +183,10 @@ GO
 select * from dbo.users
 execute dbo.check_password 1, 'admin1'
 
--------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS USUARIO --------------------------
-create or alter procedure dbo.get_preferences
-(
-	@user_id	INT
-)
-as
-begin
-	select * from dbo.preferences p
-		where p.user_id = @user_id
-end
-go
-
--------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PREFERENCIAS BUSCADOR --------------------------
-create or alter procedure dbo.update_preferences
-(
-	@user_id		INT,
-	@color			VARCHAR(50),
-	@icon_url		VARCHAR(500),
-	@border_radius	INT,
-	@font_size		INT
-)
-as
-begin
-	update p
-		set p.color = @color,
-			p.icon_url = @icon_url,
-			p.border_radius = @border_radius,
-			p.font_size = @font_size
-		from dbo.preferences p
-		where p.user_id = @user_id
-end
-go
 
 select * from dbo.users
+go
+
 
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR USUARIO --------------------------
 create or alter procedure dbo.delete_account
@@ -258,4 +202,45 @@ begin
 end
 go
 
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER USUARIO A PARTIR DE SU TOKEN --------------------------
+create or alter procedure dbo.find_user_token
+(
+	@token	VARCHAR(200)
+)
+as
+begin
+	select *
+		from dbo.users
+		where token_api = @token
+end
+go
+
+
 select * from dbo.users
+	where token_api = 'A13E8731-120F-4586-8466-BC11BD51BC49'
+
+execute dbo.find_user_token 'A13E8731-120F-4586-8466-BC11BD51BC49'
+
+
+-- CURSOR EJEMPLO
+DECLARE	@user_id INT
+
+DECLARE cursor_user CURSOR
+FOR SELECT user_id
+    FROM 
+        dbo.users
+OPEN cursor_user
+FETCH NEXT FROM cursor_user INTO 
+    @user_id
+
+WHILE @@FETCH_STATUS = 0
+    BEGIN
+        update dbo.users
+		 set token_api = NEWID()
+		 where user_id = @user_id
+        FETCH NEXT FROM cursor_user INTO 
+            @user_id 
+    END;
+
+CLOSE cursor_user;
+DEALLOCATE cursor_user;

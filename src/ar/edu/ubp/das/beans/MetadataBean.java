@@ -13,10 +13,18 @@ public class MetadataBean {
 	private String text;
 	private Integer textLength;
 	private Boolean approved;
-	private Integer popularity;
+	private Integer visitors;
 	private List<String> topWords;
 	private String[] tags;
 	private String[] filters;
+
+	public Integer getVisitors() {
+		return visitors;
+	}
+
+	public void setVisitors(Integer visitors) {
+		this.visitors = visitors;
+	}
 
 	public String[] getFilters() {
 		return filters;
@@ -82,10 +90,6 @@ public class MetadataBean {
 		return approved;
 	}
 
-	public Integer getPopularity() {
-		return popularity;
-	}
-
 	public Integer getWebsiteId() {
 		return websiteId;
 	}
@@ -120,10 +124,6 @@ public class MetadataBean {
 
 	public void setApproved(Boolean approved) {
 		this.approved = approved;
-	}
-
-	public void setPopularity(Integer popularity) {
-		this.popularity = popularity;
 	}
 
 	public void setWebsiteId(Integer websiteId) {
