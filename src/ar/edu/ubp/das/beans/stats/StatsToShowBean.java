@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.stats;
 
 public class StatsToShowBean {
 	private int popularidad;

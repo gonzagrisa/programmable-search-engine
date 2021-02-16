@@ -10,7 +10,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import ar.edu.ubp.das.beans.StatsToShowBean;
+import ar.edu.ubp.das.beans.stats.StatsToShowBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.logging.MyLogger;

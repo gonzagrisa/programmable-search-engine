@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import ar.edu.ubp.das.beans.StatsToShowBean;
+import ar.edu.ubp.das.beans.stats.StatsToShowBean;
 import ar.edu.ubp.das.db.Dao;
 
 public class MSStatsDao extends Dao<StatsToShowBean, StatsToShowBean>{
