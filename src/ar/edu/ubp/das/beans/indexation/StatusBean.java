@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.indexation;
 
 public class StatusBean {
 	protected Boolean indexed;

@@ -27,8 +27,8 @@ import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
 import org.elasticsearch.ElasticsearchException;
 
-import ar.edu.ubp.das.beans.ServiceBean;
-import ar.edu.ubp.das.beans.WebsiteBean;
+import ar.edu.ubp.das.beans.indexation.ServiceBean;
+import ar.edu.ubp.das.beans.indexation.WebsiteBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.elastic.MetadataDao;

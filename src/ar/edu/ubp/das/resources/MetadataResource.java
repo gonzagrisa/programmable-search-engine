@@ -12,7 +12,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import ar.edu.ubp.das.beans.MetadataBean;
+import ar.edu.ubp.das.beans.indexation.MetadataBean;
 import ar.edu.ubp.das.elastic.MetadataDao;
 import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 import ar.edu.ubp.das.logging.MyLogger;
@@ -42,7 +42,22 @@ public class MetadataResource {
 	public Response getMetadata() {
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
-			List<MetadataBean> metadata = elastic.get((Integer) req.getProperty("id"));
+			List<MetadataBean> metadata = elastic.get((Integer) req.getProperty("id"), false);
+			this.logger.log(MyLogger.INFO, "Petición de metadatos exitosa");
+			return Response.status(Status.OK).entity(metadata).build();
+		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Petición de metadatos con error: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
+	
+	@GET
+	@Path("indexed")
+	@Secured
+	public Response getMetadataIndexed() {
+		try {
+			MetadataDao elastic = new MetadataDaoImpl();
+			List<MetadataBean> metadata = elastic.get((Integer) req.getProperty("id"), true);
 			this.logger.log(MyLogger.INFO, "Petición de metadatos exitosa");
 			return Response.status(Status.OK).entity(metadata).build();
 		} catch (Exception e) {

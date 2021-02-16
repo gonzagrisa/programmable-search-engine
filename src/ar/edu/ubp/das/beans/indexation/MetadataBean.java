@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.indexation;
 
 import java.util.List;
 
@@ -8,7 +8,6 @@ public class MetadataBean {
 	private Integer websiteId;
 	private String URL;
 	private String type;
-	private String extension;
 	private String title;
 	private String text;
 	private Integer textLength;
@@ -17,7 +16,7 @@ public class MetadataBean {
 	private List<String> topWords;
 	private String[] tags;
 	private String[] filters;
-
+	
 	public Integer getVisitors() {
 		return visitors;
 	}
@@ -70,10 +69,6 @@ public class MetadataBean {
 		return type;
 	}
 
-	public String getExtension() {
-		return extension;
-	}
-
 	public String getTitle() {
 		return title;
 	}
@@ -104,10 +99,6 @@ public class MetadataBean {
 
 	public void setType(String type) {
 		this.type = type;
-	}
-
-	public void setExtension(String extension) {
-		this.extension = extension;
 	}
 
 	public void setTitle(String title) {

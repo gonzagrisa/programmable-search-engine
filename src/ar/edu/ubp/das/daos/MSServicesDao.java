@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import ar.edu.ubp.das.beans.ServiceBean;
+import ar.edu.ubp.das.beans.indexation.ServiceBean;
 import ar.edu.ubp.das.db.Dao;
 
 public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{

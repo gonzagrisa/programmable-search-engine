@@ -1,20 +1,56 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.search;
 
 public class SearchBean {
 	private Integer userId;
 	private String query;
-	private String sort;
+	private String sortBy;
+	private String orderBy;
 	private String type;
 	private Integer page;
 	private String dateFrom;
 	private String dateTo;
-	
-	public String getSort() {
-		return sort;
+	private Long results;
+	private String terminos;
+	private String date;
+
+	public String getDate() {
+		return date;
 	}
 
-	public void setSort(String sort) {
-		this.sort = sort;
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public Long getResults() {
+		return results;
+	}
+
+	public String getTerminos() {
+		return terminos;
+	}
+
+	public void setResults(Long results) {
+		this.results = results;
+	}
+
+	public void setTerminos(String terminos) {
+		this.terminos = terminos;
+	}
+
+	public String getSortBy() {
+		return sortBy;
+	}
+
+	public String getOrderBy() {
+		return orderBy;
+	}
+
+	public void setSortBy(String sortBy) {
+		this.sortBy = sortBy;
+	}
+
+	public void setOrderBy(String orderBy) {
+		this.orderBy = orderBy;
 	}
 
 	public String getDateFrom() {
@@ -69,12 +105,12 @@ public class SearchBean {
 	public String toString() {
 		String output = "Query: " + query;
 		output += "\nUserId: " + userId;
-		output += "\nsort: " + sort;
+		output += "\nsort: " + sortBy;
 		output += "\ntype: " + type;
 		output += "\npage: " + page;
 		output += "\ndateFrom: " + dateFrom;
 		output += "\ndateTo: " + dateTo;
 		return output;
 	}
-	
+
 }

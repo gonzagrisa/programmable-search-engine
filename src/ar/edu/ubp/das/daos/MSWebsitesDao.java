@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import ar.edu.ubp.das.beans.WebsiteBean;
+import ar.edu.ubp.das.beans.indexation.WebsiteBean;
 import ar.edu.ubp.das.db.Dao;
 
 public class MSWebsitesDao extends Dao<WebsiteBean, WebsiteBean> {
