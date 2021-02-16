@@ -45,6 +45,14 @@ BEGIN
 END
 GO
 
+execute dbo.insert_busqueda 1, "pato detective", 5, null, null, null, null
+execute dbo.insert_busqueda 1, "harry potter", 7, null, null, null, null
+execute dbo.insert_busqueda 1, "formula 1", 1, null, null, null, null
+execute dbo.insert_busqueda 1, "crepusculo", 0, null, null, null, null
+execute dbo.insert_busqueda 1, "matrix", 3, null, null, null, null
+go
+
+
 ------------------------ PROCEDIMIENTO PARA INSERTAR PALABRA --------------------------
 CREATE OR ALTER PROCEDURE dbo.insert_palabra
 (
@@ -79,6 +87,9 @@ BEGIN
 END
 GO
 
+execute dbo.get_busquedas null
+go
+
 ------------------------ PROCEDIMIENTO PARA OBTENER EL TOP DE PALABRAS BUSCADAS --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_top_palabras
 (
@@ -103,6 +114,8 @@ BEGIN
 	END
 END
 GO
+
+-- exec get_top_palabras @user_id = 1
 
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS CON RESULTADOS Y SIN RESULTADOS --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_resultados_busqueda
@@ -146,7 +159,7 @@ GO
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD de BUSQUEDAS HECHAS POR --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_cantidades
 (
-	@user_id INT NULL
+	@user_id INT
 )
 AS
 BEGIN
@@ -155,11 +168,16 @@ BEGIN
 			COUNT(CASE WHEN orderBy = 'asc' THEN 1 END) ascendente,
 			COUNT(CASE WHEN orderBy = 'desc' THEN 1 END) descendente,
 			COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados,
-			COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados
+			COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados,
+			COUNT(CASE WHEN date = CAST( GETDATE() AS Date ) THEN 1 END) realizadas_hoy,
+			COUNT(*) totales
 	FROM dbo.busquedas
-	where user_id = @user_id
+	where  user_id = @user_id
 END
 GO
+
+execute dbo.get_cantidades 1
+go
 
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS POR TIPO DE ARCHIVO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_tipo_count
@@ -184,7 +202,7 @@ CREATE TABLE dbo.calendar(date date);
 DECLARE @date date = '20200101';
 WHILE @date <= '20211201'
 BEGIN
-    INSERT INTO Calendar VALUES (@date);
+    INSERT INTO dbo.calendar VALUES (@date);
     SET @date = FORMAT(DATEADD(day, 1, @date), 'yyyy-MM-dd');
 END
 GO
@@ -204,7 +222,8 @@ BEGIN
 	END
 	IF (@from is NULL)
 	BEGIN
-		set @from = DATEADD(DAY, -10, GETDATE())
+		-- set @from = DATEADD(DAY, -10, GETDATE())
+		set @from = CAST( GETDATE() AS Date )
 	END
 	select c.date, count(query)
 	from dbo.busquedas b
@@ -215,5 +234,3 @@ BEGIN
 		group by c.date
 END
 GO
-
-execute dbo.get_busquedas_dia 2, null, null

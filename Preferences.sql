@@ -1,5 +1,6 @@
 use users
 drop table dbo.preferences
+
 -- ################## TABLA PREFERENCIAS ##################
 CREATE TABLE dbo.preferences
 (
@@ -14,7 +15,6 @@ CREATE TABLE dbo.preferences
 	constraint FK__preferences__users__END foreign key (user_id) references dbo.users
 );
 go
-
 
 -------------------------- TRIGGER PARA INSERTAR LAS OPCIONES POR DEFECTO AL NUEVO USUARIO CREADO --------------------------
 CREATE OR ALTER trigger ti_users

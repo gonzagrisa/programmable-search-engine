@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.daos.stats;
+package ar.edu.ubp.das.daos;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
