@@ -48,6 +48,7 @@ begin
 	select * from dbo.users u
 		where u.username = @username
 		and u.user_id != @user_id
+		and u.status = 1
 end
 go
 
@@ -83,13 +84,14 @@ begin
 	select * from dbo.users u
 		where u.username = @username
 		and   u.password = @crypt
+		and status = 1
 end
 go
 
 select * from dbo.users
 
 execute dbo.validate_user 'admin', 'secret'
-
+go
 -------------------------- PROCEDIMIENTO ALMACENADO REGISTRAR --------------------------
 create or alter procedure dbo.new_user
 (
@@ -110,19 +112,19 @@ end
 go
 
 
-execute dbo.new_user 'user2', 'user2', 'user3', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user4', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user5', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user6', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user7', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user8', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user9', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user10', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user11', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user12', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user13', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user14', 'secret'
-execute dbo.new_user 'user2', 'user2', 'user15', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user3', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user4', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user5', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user6', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user7', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user8', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user9', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user10', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user11', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user12', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user13', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user14', 'secret'
+execute dbo.new_user 'userName', 'userSurname', 'user15', 'secret'
 go
 
 
@@ -212,6 +214,7 @@ begin
 	select *
 		from dbo.users
 		where token_api = @token
+		and status = 1
 end
 go
 
