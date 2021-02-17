@@ -196,7 +196,7 @@ public class ServicesResource {
 		List<WebsiteBean> websites = serviceWebsiteDao.select(service);
 		for (WebsiteBean website : websites) {
 			websiteDao.delete(website.getWebsiteId());
-			elastic.deleteWebsiteId(website.getWebsiteId());
+			elastic.deleteByWebsiteId(website.getWebsiteId());
 		}
 	}
 	

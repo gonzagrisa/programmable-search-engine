@@ -135,7 +135,7 @@ public class MetadataDaoImpl implements MetadataDao {
 	}
 
 	@Override
-	public void deleteWebsiteId(Integer id) throws ElasticsearchException, Exception {
+	public void deleteByWebsiteId(Integer id) throws ElasticsearchException, Exception {
 		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX);
 		request.setQuery(new TermQueryBuilder("websiteId", id));
 		request.setRefresh(true);
@@ -149,6 +149,26 @@ public class MetadataDaoImpl implements MetadataDao {
 			public void onFailure(Exception e) {
 				logger.log(MyLogger.ERROR,
 						"Error al eliminar Metadatos de pagina id: " + id + " . Error: " + e.getMessage());
+			}
+		};
+		client.deleteByQueryAsync(request, RequestOptions.DEFAULT, listener);
+	}
+	
+	@Override
+	public void deleteByUserId(Integer id) throws ElasticsearchException, Exception {
+		DeleteByQueryRequest request = new DeleteByQueryRequest(INDEX);
+		request.setQuery(new TermQueryBuilder("userId", id));
+		request.setRefresh(true);
+		ActionListener<BulkByScrollResponse> listener = new ActionListener<BulkByScrollResponse>() {
+			@Override
+			public void onResponse(BulkByScrollResponse bulkResponse) {
+				logger.log(MyLogger.INFO, "Metadatos generados por el usuario con id " + id + " eliminados");
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				logger.log(MyLogger.ERROR,
+						"Error al eliminar los metadatos del usuario con id: " + id + " . Error: " + e.getMessage());
 			}
 		};
 		client.deleteByQueryAsync(request, RequestOptions.DEFAULT, listener);

@@ -11,7 +11,8 @@ import ar.edu.ubp.das.beans.search.SearchBean;
 public interface MetadataDao {
 	public List<MetadataBean> get(Integer id, Boolean indexed) throws ElasticsearchException, Exception;
 	public MetadataBean getId(String id) throws ElasticsearchException, Exception;
-	public void deleteWebsiteId(Integer id) throws ElasticsearchException, Exception;
+	public void deleteByWebsiteId(Integer id) throws ElasticsearchException, Exception;
+	public void deleteByUserId(Integer id) throws ElasticsearchException, Exception;
 	public void update(MetadataBean meta) throws ElasticsearchException, Exception;
 	public void delete(String id) throws ElasticsearchException, Exception;
 	public void updateBatch(List<MetadataBean> metadataList) throws ElasticsearchException, Exception;
