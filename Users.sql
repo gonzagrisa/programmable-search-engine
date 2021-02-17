@@ -16,7 +16,6 @@ CREATE TABLE dbo.users (
 	status		BIT					NOT NULL,
 	token_api	UNIQUEIDENTIFIER	default NEWID(),
 	constraint PK__users__END primary key (user_id),
-	constraint UK__users__END unique (username),
 	constraint CK__users_role__END check (role in ('ADMIN', 'USER'))
 );
 go
@@ -103,6 +102,16 @@ create or alter procedure dbo.new_user
 )
 as
 begin	
+	if exists (
+		select 1
+		from dbo.users
+		where username = @username
+			and status = 1
+	)
+	BEGIN
+		raiserror ('El nombre de usuario ya se encuentra en uso',16,1)
+		return
+	END
 	declare @crypt varbinary(32)
 	select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
@@ -111,7 +120,12 @@ begin
 end
 go
 
+update dbo.websites set reindex = 1, indexed = 0
 
+select * from dbo.websites;
+
+select * from dbo.users
+execute dbo.new_user 'userName', 'userSurname', 'TinoCle', 'secret'
 execute dbo.new_user 'userName', 'userSurname', 'user3', 'secret'
 execute dbo.new_user 'userName', 'userSurname', 'user4', 'secret'
 execute dbo.new_user 'userName', 'userSurname', 'user5', 'secret'
