@@ -6,6 +6,7 @@ import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -19,13 +20,12 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
 
 import ar.edu.ubp.das.beans.PreferencesBean;
-import ar.edu.ubp.das.beans.UserBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.logging.MyLogger;
 import ar.edu.ubp.das.security.Secured;
 
-@Path("settings")
+@Path("preferences")
 public class PreferencesResource {
 	
 	private MyLogger logger;
@@ -62,11 +62,12 @@ public class PreferencesResource {
 	public Response getPreferencesToken(@PathParam("token") String token) {
 		try {
 			System.out.println(token);
-			Dao<UserBean, String> daoToken = DaoFactory.getDao("UserToken", "ar.edu.ubp.das");
-			Dao<UserBean, String> daoPref = DaoFactory.getDao("Preferences", "ar.edu.ubp.das");
-			UserBean user = daoToken.find(token);
-			return Response.status(Status.OK).entity(daoPref.find(user.getUserId())).build();
-		} catch (Exception e) {
+			Dao<PreferencesBean, String> dao = DaoFactory.getDao("Preferences", "ar.edu.ubp.das");
+			return Response.status(Status.OK).entity(dao.find(token)).build();
+		} catch (NotFoundException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+		catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -76,14 +77,14 @@ public class PreferencesResource {
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getFile() {
 		//@Produces("application/zip")
-		File f = new File("crawling.rar");
+		File f = new File("search-box.rar");
 
 	    if (!f.exists()) {
 	        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 	    }
 
 	    ContentDisposition contentDisposition = ContentDisposition.type("attachment")
-	    	    .fileName("filename.zip").creationDate(new Date()).build();
+	    	    .fileName("search-box.rar").creationDate(new Date()).build();
 
 	    return Response.status(Status.OK).entity(f)
 	    		.header("Content-Disposition", contentDisposition).build();

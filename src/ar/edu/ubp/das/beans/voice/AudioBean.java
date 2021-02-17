@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.voice;
 
 import java.util.HashMap;
 import java.util.Map;

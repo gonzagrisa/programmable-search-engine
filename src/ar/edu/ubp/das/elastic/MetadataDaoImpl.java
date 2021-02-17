@@ -21,11 +21,16 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.search.MultiMatchQuery;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -107,11 +112,21 @@ public class MetadataDaoImpl implements MetadataDao {
 	@Override
 	public void update(MetadataBean meta) throws IOException {
 		UpdateRequest request = new UpdateRequest(INDEX, meta.getId())
-				.doc("approved", true, "title", meta.getTitle(), "tags", meta.getTags())
+				.doc("approved", true, "title", meta.getTitle(), "tags", meta.getTags(), "filters", meta.getFilters())
 				.setRefreshPolicy(REFRESH_POLICY);
 		UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
 		logger.log(MyLogger.INFO,
 				"Metadato " + meta.getId() + " actualizado. Respuesta: " + updateResponse.status().toString());
+	}
+
+	@Override
+	public void increasePopularity(String id) throws IOException {
+		UpdateRequest request = new UpdateRequest(INDEX, id);
+		Script inline = new Script("ctx._source.popularity += 1");
+		request.script(inline);
+		UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
+		logger.log(MyLogger.INFO,
+				"Metadato " + id + " actualizado. Respuesta: " + updateResponse.status().toString());
 	}
 
 	@Override
@@ -197,32 +212,33 @@ public class MetadataDaoImpl implements MetadataDao {
 	public ResultsBean search(SearchBean search) throws ElasticsearchException, Exception {
 		QueryBuilder query;
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-		if (search.getType() != null) {
+		if (search.getType() != null && !search.getType().isEmpty()) {
 			boolQueryBuilder.must(QueryBuilders.termQuery("type", search.getType()));
 		}
-		if (search.getDateFrom() != null) {
+		if (search.getDateFrom() != null && !search.getDateFrom().isEmpty()) {
 			boolQueryBuilder.must(QueryBuilders.rangeQuery("date").gte(search.getDateFrom()));
 		}
-		if (search.getDateTo() != null) {
+		if (search.getDateTo() != null && !search.getDateTo().isEmpty()) {
 			boolQueryBuilder.must(QueryBuilders.rangeQuery("date").lte(search.getDateTo()));
 		}
-		boolQueryBuilder.must(QueryBuilders.termQuery("userId", search.getUserId()))
+		boolQueryBuilder
+				.must(QueryBuilders.termQuery("userId", search.getUserId()))
 				.must(QueryBuilders.termQuery("approved", true))
-				.must(QueryBuilders.multiMatchQuery(search.getQuery(), "tags", "text", "title", "URL")
-						.field("tags", 10).field("text", 1).field("title", 2))
+				.must(QueryBuilders.multiMatchQuery(search.getQuery(), "tags", "text", "title", "URL").field("tags", 10)
+						.field("text", 1).field("title", 2))
 				.mustNot(QueryBuilders.matchQuery("filters", search.getQuery()));
 		query = boolQueryBuilder;
 
-		HighlightBuilder highlightBuilder = new HighlightBuilder().preTags("<em>").postTags("</em>").fragmentSize(500)
-				.noMatchSize(500).field("text");
+		HighlightBuilder highlightBuilder = new HighlightBuilder().preTags("<strong>").postTags("</strong>")
+				.fragmentSize(200).noMatchSize(200).field("text");
 		SearchRequest searchRequest = new SearchRequest(INDEX);
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(query);
 		sourceBuilder.highlighter(highlightBuilder);
 		sourceBuilder.trackTotalHits(true);
-		sourceBuilder.from((search.getPage() - 1) * 20).size(20);
+		sourceBuilder.from((search.getPage() - 1) * 10).size(10);
 
-		if (search.getSortBy() != null) {
+		if (search.getSortBy() != null && !search.getSortBy().isEmpty()) {
 			sourceBuilder.sort(search.getSortBy(), search.getOrderBy().equals("asc") ? SortOrder.ASC : SortOrder.DESC);
 		}
 

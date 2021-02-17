@@ -29,7 +29,6 @@ begin
 end
 go
 
-
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS USUARIO --------------------------
 create or alter procedure dbo.get_preferences
 (
@@ -41,6 +40,22 @@ begin
 		where p.user_id = @user_id
 end
 go
+
+CREATE OR ALTER PROCEDURE dbo.get_preferences_token
+(
+	@token	VARCHAR(40)
+)
+AS
+BEGIN
+	select p.user_id, border_radius, border_width, icon_url, icon_size, placeholder, color
+		from dbo.users u
+		join dbo.preferences p
+		on u.user_id = p.user_id
+		where u.token_api = @token
+END
+GO
+
+execute dbo.get_preferences_token 'A13E8731-120F-4586-8466-BC11BD51BC49'
 
 execute dbo.get_preferences 2
 

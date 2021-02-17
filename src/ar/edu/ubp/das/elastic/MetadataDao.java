@@ -1,5 +1,6 @@
 package ar.edu.ubp.das.elastic;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.elasticsearch.ElasticsearchException;
@@ -19,4 +20,5 @@ public interface MetadataDao {
 	public void deleteBatch(List<MetadataBean> metadata) throws ElasticsearchException, Exception;
 	public ResultsBean search(SearchBean search) throws ElasticsearchException, Exception;
 	public void significantWords(SearchBean search) throws ElasticsearchException, Exception;
+	public void increasePopularity(String id) throws IOException;
 }
