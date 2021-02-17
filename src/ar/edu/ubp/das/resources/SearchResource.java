@@ -21,13 +21,13 @@ import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 
 @Path("search")
 public class SearchResource {
-	
+
 	@GET
 	@Path("ping")
 	public Response ping() {
 		return Response.ok().entity("pong").build();
 	}
-	
+
 	@Path("{token}")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -44,17 +44,17 @@ public class SearchResource {
 				word.setUserId(userId);
 				word.setWord(words[i]);
 				daoWord.insert(word);
-			}			
+			}
 			MetadataDao elastic = new MetadataDaoImpl();
 			return Response.status(Status.OK).entity(elastic.search(search)).build();
 		} catch (ElasticsearchException e) {
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}  catch (Exception e) {
+		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@Path("words/{token}")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
@@ -71,8 +71,22 @@ public class SearchResource {
 		} catch (ElasticsearchException e) {
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}  catch (Exception e) {
+		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@Path("popular/{id}")
+	@POST
+	public Response increasePopularity(@PathParam("id") String id) {
+		try {
+			System.out.println("Link visited");
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.increasePopularity(id);
+			return Response.status(Status.OK).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
+
 }

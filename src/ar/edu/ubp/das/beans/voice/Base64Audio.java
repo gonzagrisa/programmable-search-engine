@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.beans;
+package ar.edu.ubp.das.beans.voice;
 
 public class Base64Audio {
 	private String b64audio;
