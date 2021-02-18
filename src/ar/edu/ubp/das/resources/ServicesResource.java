@@ -105,7 +105,7 @@ public class ServicesResource {
 	public Response updateServiceInfo(@PathParam("serviceId") Integer id, ServiceBean service) {
 		try {
 			this.checkBody(service);
-			checkResource(service);
+			this.checkResource(service);
 			service.setUserId((Integer) req.getProperty("id"));
 			this.deleteServiceWebsites(service);
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
@@ -171,7 +171,7 @@ public class ServicesResource {
 	public Response testPing(ServiceBean service) {
 		try {
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
-			checkPingEndpoint(service.getURLPing(), service.getProtocol());
+			checkPingEndpoint(service.getUrl(), service.getProtocol());
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR, "Petición manual de chequeo de ping con error: " + e.getMessage());
@@ -201,8 +201,10 @@ public class ServicesResource {
 	}
 	
 	private void checkResource(ServiceBean service) throws Exception {
-		String ping = service.getURLPing().toLowerCase();
-		String resource = service.getURLResource().toLowerCase();
+		String urlBase = service.getUrl().toLowerCase();
+		// le quito la barra del último si la tiene
+		String ping = urlBase + "ping";
+		String resource = urlBase + "list";
 		String protocol = service.getProtocol();
 		switch (protocol) {
 			case PROTOCOL_REST: {
@@ -253,6 +255,10 @@ public class ServicesResource {
 	private void checkBody(ServiceBean service) throws Exception {
 		if (service == null || !service.isValid()) {
 			throw new Exception("Información requerida faltante");
+		} else {
+			// siempre va a quedar con el slash al último
+			if (service.getProtocol().equals(PROTOCOL_REST) && !service.getUrl().endsWith("/"))
+				service.setUrl(service.getUrl() + "/");
 		}
 	}
 }
