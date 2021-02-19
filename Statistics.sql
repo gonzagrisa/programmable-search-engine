@@ -163,7 +163,9 @@ CREATE OR ALTER PROCEDURE dbo.get_cantidades
 )
 AS
 BEGIN
-	SELECT	COUNT(CASE WHEN sortBy = 'popularity' THEN 1 END) popularidad,
+	IF (@user_id IS NULL)
+	BEGIN
+		SELECT	COUNT(CASE WHEN sortBy = 'popularity' THEN 1 END) popularidad,
 			COUNT(CASE WHEN sortBy = 'date' THEN 1 END) fecha,
 			COUNT(CASE WHEN orderBy = 'asc' THEN 1 END) ascendente,
 			COUNT(CASE WHEN orderBy = 'desc' THEN 1 END) descendente,
@@ -171,13 +173,28 @@ BEGIN
 			COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados,
 			COUNT(CASE WHEN date = CAST( GETDATE() AS Date ) THEN 1 END) realizadas_hoy,
 			COUNT(*) totales
-	FROM dbo.busquedas
-	where  user_id = @user_id
+		FROM dbo.busquedas
+	END
+	ELSE
+	BEGIN
+		SELECT	COUNT(CASE WHEN sortBy = 'popularity' THEN 1 END) popularidad,
+				COUNT(CASE WHEN sortBy = 'date' THEN 1 END) fecha,
+				COUNT(CASE WHEN orderBy = 'asc' THEN 1 END) ascendente,
+				COUNT(CASE WHEN orderBy = 'desc' THEN 1 END) descendente,
+				COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados,
+				COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados,
+				COUNT(CASE WHEN date = CAST( GETDATE() AS Date ) THEN 1 END) realizadas_hoy,
+				COUNT(*) totales
+		FROM dbo.busquedas
+		where  user_id = @user_id
+	END
 END
 GO
 
-execute dbo.get_cantidades 1
+execute dbo.get_cantidades null
 go
+
+select * from dbo.users
 
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS POR TIPO DE ARCHIVO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_tipo_count

@@ -37,6 +37,21 @@ public class MSStatsDao extends Dao<StatsToShowBean, StatsToShowBean>{
 		}
 		return null;
 	}
+	
+	@Override
+	public List<StatsToShowBean> select() throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.get_cantidades(?)");
+			this.setNull(1, java.sql.Types.INTEGER);
+			return this.executeQuery();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.close();
+		}
+		return null;
+	}
 
 	@Override
 	public void delete(Integer arg0) throws SQLException {
@@ -78,12 +93,6 @@ public class MSStatsDao extends Dao<StatsToShowBean, StatsToShowBean>{
 	public void insert(StatsToShowBean arg0, Integer arg1) throws SQLException {
 		// TODO Auto-generated method stub
 		
-	}
-
-	@Override
-	public List<StatsToShowBean> select() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

@@ -39,6 +39,7 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 		user.setLastName(result.getString("last_name"));
 		user.setRole(result.getString("role"));
 		user.setPassword(result.getString("password"));
+		user.setToken(result.getString("token_api"));
 		return user;
 	}
 

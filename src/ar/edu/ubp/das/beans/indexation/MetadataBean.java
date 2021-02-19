@@ -16,7 +16,16 @@ public class MetadataBean {
 	private List<String> topWords;
 	private String[] tags;
 	private String[] filters;
+	private String date;
 	
+	public String getDate() {
+		return date;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
 	public Integer getVisitors() {
 		return visitors;
 	}

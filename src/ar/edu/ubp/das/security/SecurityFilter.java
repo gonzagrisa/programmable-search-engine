@@ -44,6 +44,7 @@ public class SecurityFilter implements ContainerRequestFilter {
             		new AppSecurityContext(user, requestContext.getSecurityContext().isSecure());
 			requestContext.setSecurityContext(secContext);
 			requestContext.setProperty("id", user.getUserId());
+			requestContext.setProperty("rol", user.getRole());
 		} catch (Exception e) {
 			this.abortWithUnauthorized(requestContext);
 		}

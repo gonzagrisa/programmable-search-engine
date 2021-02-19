@@ -11,7 +11,16 @@ public class UserBean implements Principal {
 	private String lastName;
 	private String username;
 	private String password;
+	private String token;
 	
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
 	public Integer getUserId() {
 		return userId;
 	}

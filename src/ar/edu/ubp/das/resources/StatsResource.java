@@ -1,6 +1,7 @@
 package ar.edu.ubp.das.resources;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -14,6 +15,7 @@ import ar.edu.ubp.das.beans.stats.StatsToShowBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
 import ar.edu.ubp.das.logging.MyLogger;
+import ar.edu.ubp.das.security.Roles;
 import ar.edu.ubp.das.security.Secured;
 
 @Path("stats")
@@ -34,8 +36,13 @@ public class StatsResource {
 	public Response getAll() {
 		try {
 			Dao<StatsToShowBean, StatsToShowBean> dao = DaoFactory.getDao("Stats", "ar.edu.ubp.das");
+			List<StatsToShowBean> stats = new ArrayList<StatsToShowBean>();
+			if (req.getProperty("rol").equals(Roles.ADMIN_ROLE)) {
+				stats = dao.select();
+			} else {
+				stats = dao.select((Integer) req.getProperty("id"));
+			}
 			this.logger.log(MyLogger.INFO, "Petición de estadísticas exitosa");
-			List<StatsToShowBean> stats = dao.select((Integer) req.getProperty("id"));
 			return Response.status(Status.OK).entity(stats.get(0)).build();
 		} catch (SQLException e) {
 			this.logger.log(
