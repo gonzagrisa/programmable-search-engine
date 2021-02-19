@@ -171,7 +171,8 @@ public class ServicesResource {
 	public Response testPing(ServiceBean service) {
 		try {
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
-			checkPingEndpoint(service.getUrl(), service.getProtocol());
+			String endpoint = service.getUrl() + "ping";
+			checkPingEndpoint(endpoint, service.getProtocol());
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR, "Petición manual de chequeo de ping con error: " + e.getMessage());

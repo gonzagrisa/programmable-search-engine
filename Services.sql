@@ -45,9 +45,10 @@ AS
 BEGIN
 	select * from dbo.services s
 		WHERE s.user_id = @user_id
-		AND s.isActive = 1
 END
 GO
+
+execute dbo.get_services_user 2
 
 -------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
 CREATE OR ALTER PROCEDURE dbo.clean_service_pages
@@ -70,7 +71,7 @@ GO
 CREATE OR ALTER PROCEDURE dbo.insert_service
 (
 	@user_id		INT,
-	@url	VARCHAR(500),
+	@url			VARCHAR(500),
 	@protocol       VARCHAR(4)
 )
 AS
@@ -202,8 +203,6 @@ BEGIN
 	END
 END
 GO
-
-
 
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url, ',')

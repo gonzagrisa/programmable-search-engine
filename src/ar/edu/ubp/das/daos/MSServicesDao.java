@@ -20,6 +20,7 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		service.setIndexed(result.getBoolean("indexed"));
 		service.setIndexDate(result.getString("index_date"));
 		service.setIsUp(result.getBoolean("isUp"));
+		service.setIsActive(result.getBoolean("isActive"));
 		return service;
 	}
 
