@@ -1,5 +1,6 @@
 use users
 drop table dbo.busquedas
+drop table dbo.palabras
 
 CREATE TABLE dbo.busquedas
 (

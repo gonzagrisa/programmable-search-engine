@@ -8,8 +8,7 @@ CREATE TABLE dbo.services
 (
     service_id		INT				NOT NULL IDENTITY,
     user_id			INT				NOT NULL,
-    url_resource	VARCHAR(500)	NOT NULL,
-	url_ping		VARCHAR(500)	NOT NULL,
+	url				VARCHAR(500)	NOT NULL,
 	protocol        VARCHAR(4)    	NOT NULL,
 	reindex			BIT				NOT NULL default 1,
 	indexed			BIT				NOT NULL default 0,
@@ -17,7 +16,7 @@ CREATE TABLE dbo.services
 	isActive		BIT				NOT NULL default 1,
 	isUp			BIT				NOT NULL default 1,
 	constraint PK__services__END primary key (service_id),
-	constraint UK__services__UK_url_resource__END UNIQUE (user_id, url_resource),
+	constraint UK__services__UK_url__END UNIQUE (user_id, url),
 	constraint CK__services__valid_protocol__END CHECK (protocol in ('REST', 'SOAP')),
 	constraint FK__services__users__END foreign key (user_id) references dbo.users
 );
@@ -26,7 +25,7 @@ go
 select * from dbo.services
 
 -- Para obtener todos los procedimientos almacenados de la base de datos
-SELECT * 
+SELECT *
   FROM users.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
 go
@@ -71,25 +70,24 @@ GO
 CREATE OR ALTER PROCEDURE dbo.insert_service
 (
 	@user_id		INT,
-	@url_ping		VARCHAR(500),
-	@url_resource	VARCHAR(500),
+	@url	VARCHAR(500),
 	@protocol       VARCHAR(4)
 )
 AS
 BEGIN
-	IF EXISTS (SELECT 1 from dbo.services where url_resource = @url_resource and user_id = @user_id and isActive = 0)
+	IF EXISTS (SELECT 1 from dbo.services where url = @url and user_id = @user_id and isActive = 0)
 	BEGIN
 		update dbo.services
 			set isActive = 1,
 				reindex = 1,
 				indexed = 0,
 				index_date = null
-			where url_resource = @url_resource and user_id = @user_id
+			where url = @url and user_id = @user_id
 	END
 	ELSE
 	BEGIN
-		insert into dbo.services(user_id, url_resource, url_ping, protocol)
-		values	(@user_id, @url_resource, @url_ping, @protocol)
+		insert into dbo.services(user_id, url, protocol)
+		values	(@user_id, @url, @protocol)
 	END
 END
 GO
@@ -98,15 +96,13 @@ GO
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_service (
     @id				INT,
-	@url_resource	VARCHAR(500),
-    @url_ping		VARCHAR(500),
+    @url		VARCHAR(500),
 	@protocol		VARCHAR(4)
 )
 AS
 BEGIN
     update s
-	set url_resource = @url_resource,
-		url_ping = @url_ping,
+	set url = @url,
 		protocol = @protocol,
 		reindex = 1,
 		indexed = 0,
@@ -121,7 +117,7 @@ GO
 CREATE or ALTER PROCEDURE dbo.get_services_to_crawl
 AS
 BEGIN
-    select user_id, service_id, url_resource, url_ping, protocol
+    select user_id, service_id, url, protocol
 	from dbo.services
 	where reindex = 1
 	 and isActive = 1
@@ -193,14 +189,14 @@ AS
 BEGIN
 	IF (@get_indexed = 1)
 	BEGIN
-		select * 
+		select *
 			from dbo.websites
 			where service_id = @service_id
 			AND	  indexed = 1
 	END
 	ELSE
 	BEGIN
-		select * 
+		select *
 			from dbo.websites
 			where service_id = @service_id
 	END
@@ -210,17 +206,17 @@ GO
 
 
 ----------------------------------------------------------------------------------------------------------------
-select user_id, string_agg(url_resource, ',')
+select user_id, string_agg(url, ',')
 	from dbo.services
 	where reindex = 1
 	group by user_id
 
-insert into dbo.services(user_id, url_resource, url_ping, protocol, reindex)
-values	(1, 'youtube0.com/0','youtube0.com/ping', 'REST', 0),
-		(1, 'youtube0.com/1','youtube0.com/ping', 'REST', 0),
-		(1, 'youtube0.com/2','youtube0.com/ping', 'REST', 1),
-		(1, 'youtube0.com/3','youtube0.com/ping', 'REST', 1),
-		(1, 'youtube0.com/4','youtube0.com/ping', 'REST', 1)
+insert into dbo.services(user_id, url, protocol, reindex)
+values	(1, 'youtube0.com', 'REST', 0),
+		(1, 'youtube0.com', 'REST', 0),
+		(1, 'youtube0.com', 'REST', 1),
+		(1, 'youtube0.com', 'REST', 1),
+		(1, 'youtube0.com', 'REST', 1)
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO

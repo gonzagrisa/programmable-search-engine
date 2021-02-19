@@ -391,6 +391,7 @@ select * from dbo.websites
 
 update dbo.services
 	set reindex = 1 where service_id = 33
+GO
 
 CREATE OR ALTER PROCEDURE dbo.get_service_website_indexed
 (

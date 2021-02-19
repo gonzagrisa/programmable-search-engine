@@ -21,6 +21,8 @@ import javax.ws.rs.core.SecurityContext;
 import ar.edu.ubp.das.beans.UserBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;
+import ar.edu.ubp.das.elastic.MetadataDao;
+import ar.edu.ubp.das.elastic.MetadataDaoImpl;
 import ar.edu.ubp.das.logging.MyLogger;
 import ar.edu.ubp.das.security.Roles;
 import ar.edu.ubp.das.security.Secured;
@@ -29,7 +31,7 @@ import io.jsonwebtoken.Jwts;
 
 @Path("users")
 public class UsersResource {
-	
+
 	private MyLogger logger;
 
 	@Context
@@ -37,7 +39,7 @@ public class UsersResource {
 
 	@Context
 	ContainerRequestContext request;
-	
+
 	public UsersResource() {
 		this.logger = new MyLogger(this.getClass().getSimpleName());
 	}
@@ -49,7 +51,7 @@ public class UsersResource {
 		this.logger.log(MyLogger.INFO, "Petición de ping exitosa");
 		return Response.status(Status.OK).entity("pong!").build();
 	}
-	
+
 	@POST
 	@Path("login")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -93,7 +95,7 @@ public class UsersResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@GET
 	@Secured
 	@Path("info")
@@ -148,27 +150,27 @@ public class UsersResource {
 			UserBean user = dao.find(id);
 			if (user == null) {
 				this.logger.log(
-					MyLogger.WARNING, 
+					MyLogger.WARNING,
 					"Petición de devolución de cuenta de un usuario inexistente"
 				);
 				throw new Exception("User not Found");
 			}
 			String token = issueToken(user);
 			this.logger.log(
-				MyLogger.INFO, 
+				MyLogger.INFO,
 				"Petición de devolución de cuenta de un usuario exitosa"
 			);
 			return Response.ok().entity(token).build();
 		} catch (Exception e) {
 			this.logger.log(
-					MyLogger.ERROR, 
+					MyLogger.ERROR,
 					"Petición de devolución de cuenta de un usuario con error: "
 					+ e.getMessage()
 				);
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Secured
 	@RolesAllowed(Roles.ADMIN_ROLE)
@@ -253,7 +255,7 @@ public class UsersResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@PUT
 	@Secured
 	@Path("{id}")
@@ -281,9 +283,12 @@ public class UsersResource {
 	@Path("me")
 	public Response deleteUser() {
 		try {
+			int userId = (Integer) request.getProperty("id");
 			Dao<UserBean, UserBean> dao = this.getDao();
-			dao.delete((Integer) request.getProperty("id"));
+			dao.delete(userId);
 			this.logger.log(MyLogger.INFO, "Eliminación propia de usuario exitosa");
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteByUserId(userId);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
 			this.logger.log(
@@ -301,7 +306,7 @@ public class UsersResource {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	// el admin le borra la cuenta a un usuario
 	@DELETE
 	@Secured
@@ -312,6 +317,8 @@ public class UsersResource {
 		try {
 			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.delete(id);
+			MetadataDao elastic = new MetadataDaoImpl();
+			elastic.deleteByUserId(id);
 			this.logger.log(MyLogger.INFO, "Eliminación de usuario por parte del admin exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
@@ -340,7 +347,7 @@ public class UsersResource {
 			throw new Exception("Nombre de usuario o contraseña incorrectos");
 		}
 	}
-	
+
 	private String issueToken(UserBean user) {
 		return Jwts.builder()
 				.setSubject("usr")
@@ -349,7 +356,7 @@ public class UsersResource {
 				.claim("role", user.getRole())
 				.signWith(SecurityFilter.KEY).compact();
 	}
-	
+
 	private String issueToken(UserBean user, Integer impersonator) {
 		return Jwts.builder()
 				.setSubject("usr")
@@ -359,7 +366,7 @@ public class UsersResource {
 				.claim("impersonator", impersonator)
 				.signWith(SecurityFilter.KEY).compact();
 	}
-	
+
 	private Dao<UserBean, UserBean> getDao() throws SQLException {
 		return DaoFactory.getDao("Users", "ar.edu.ubp.das");
 	}

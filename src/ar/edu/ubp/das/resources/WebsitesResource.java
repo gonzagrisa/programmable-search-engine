@@ -95,7 +95,7 @@ public class WebsitesResource {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			dao.update(websiteId);
 			MetadataDao elastic = new MetadataDaoImpl();
-			elastic.deleteWebsiteId(websiteId);
+			elastic.deleteByWebsiteId(websiteId);
 			this.logger.log(MyLogger.INFO, "Petición de reindexado de página exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
@@ -114,7 +114,7 @@ public class WebsitesResource {
 			website.setUserId((Integer) req.getProperty("id"));
 			isDomainRegistered(website);
 			MetadataDao elastic = new MetadataDaoImpl();
-			elastic.deleteWebsiteId(website.getWebsiteId());
+			elastic.deleteByWebsiteId(website.getWebsiteId());
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			dao.update(website);
 			this.logger.log(MyLogger.INFO, "Actualización de página exitosa");
@@ -176,7 +176,7 @@ public class WebsitesResource {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			domainExists(website);
 			MetadataDao elastic = new MetadataDaoImpl();
-			elastic.deleteWebsiteId(website.getWebsiteId());
+			elastic.deleteByWebsiteId(website.getWebsiteId());
 			dao.delete(website.getWebsiteId());
 			this.logger.log(MyLogger.INFO, "Eliminacion de pagina exitosa");
 			return Response.status(Status.NO_CONTENT).build();
