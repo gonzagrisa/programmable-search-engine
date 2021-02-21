@@ -47,7 +47,7 @@ public class ServicesResource {
 
 	@Context
 	ContainerRequestContext req;
-	
+
 	public ServicesResource() {
 		this.MyHttpClient = HttpClient.newBuilder()
 	            .version(HttpClient.Version.HTTP_1_1)
@@ -170,9 +170,9 @@ public class ServicesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response testPing(ServiceBean service) {
 		try {
-			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
-			String endpoint = service.getUrl() + "ping";
-			checkPingEndpoint(endpoint, service.getProtocol());
+			this.checkResource(service);
+			this.checkPingEndpoint(service.getUrl(), service.getProtocol());
+			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping exitosa");
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR, "Petición manual de chequeo de ping con error: " + e.getMessage());
@@ -180,7 +180,7 @@ public class ServicesResource {
 		}
 	}
 
-	
+
 	private void unlinkWebsites(ServiceBean service) throws SQLException {
 		Dao<WebsiteBean, ServiceBean> serviceWebsiteDao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
 		Dao<WebsiteBean, WebsiteBean> websiteDao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
@@ -189,7 +189,7 @@ public class ServicesResource {
 			websiteDao.update(website, null);
 		}
 	}
-	
+
 	private void deleteServiceWebsites(ServiceBean service) throws ElasticsearchException, Exception {
 		Dao<WebsiteBean, ServiceBean> serviceWebsiteDao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
 		Dao<WebsiteBean, WebsiteBean> websiteDao = DaoFactory.getDao("Websites", "ar.edu.ubp.das");
@@ -200,21 +200,18 @@ public class ServicesResource {
 			elastic.deleteByWebsiteId(website.getWebsiteId());
 		}
 	}
-	
+
 	private void checkResource(ServiceBean service) throws Exception {
-		String urlBase = service.getUrl().toLowerCase();
-		// le quito la barra del último si la tiene
-		String ping = urlBase + "ping";
-		String resource = urlBase + "list";
+		String url = service.getUrl().toLowerCase();
 		String protocol = service.getProtocol();
 		switch (protocol) {
 			case PROTOCOL_REST: {
-				if (ping.contains(WSDL) || resource.contains(WSDL))
+				if (url.contains(WSDL))
 					throw new Exception("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
 			case PROTOCOL_SOAP: {
-				if (!ping.contains(WSDL) || !resource.contains(WSDL))
+				if (!url.contains(WSDL))
 					throw new Exception("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
@@ -222,10 +219,10 @@ public class ServicesResource {
 	}
 
 	private void checkPingEndpoint(String endpoint, String protocol) throws Exception, BadRequestException {
+		this.logger.log(MyLogger.INFO, "Probando endpoint " + endpoint + " (" + protocol + ")");
 		try {
-			this.logger.log(MyLogger.INFO, "Probando endpoint " + endpoint + " (" + protocol + ")");
 			if (protocol.equals(PROTOCOL_REST)) {
-				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint)).build();
+				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint + "ping")).build();
 				HttpResponse<String> response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() >= 400) {
 					throw new Exception();
@@ -238,12 +235,11 @@ public class ServicesResource {
 				Client client = jdcf.createClient(endpoint);
 				Object res[] = client.invoke("ping");
 				client.close();
-				System.out.println(res[0]);
-				System.out.println("Service OK");
 			}
 		} catch (BadRequestException e) {
 			throw e;
 		} catch (Exception e) {
+			e.printStackTrace();
 			// Generalizamos todas las excepciones que puedan saltar en una sola
 			throw new Exception("El servicio no responde");
 		}
