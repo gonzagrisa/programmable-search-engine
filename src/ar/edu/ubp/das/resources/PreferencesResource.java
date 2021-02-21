@@ -83,7 +83,7 @@ public class PreferencesResource {
 		
 	    if (!f.exists()) {
 	    	this.logger.log(
-	    		MyLogger.INFO,
+	    		MyLogger.ERROR,
 	    		"Descarga de componente de búsqueda con error: No se pudo crear el archivo"
 	    	);
 	        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
