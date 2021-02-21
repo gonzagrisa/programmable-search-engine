@@ -61,13 +61,15 @@ public class PreferencesResource {
 	@Path("{token}")
 	public Response getPreferencesToken(@PathParam("token") String token) {
 		try {
-			System.out.println(token);
 			Dao<PreferencesBean, String> dao = DaoFactory.getDao("Preferences", "ar.edu.ubp.das");
+			this.logger.log(MyLogger.INFO, "Petición de token de preferencias exitosa: " + token);
 			return Response.status(Status.OK).entity(dao.find(token)).build();
 		} catch (NotFoundException e) {
+			this.logger.log(MyLogger.ERROR, "Petición de token de preferencias con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 		catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Petición de token de preferencias con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -78,14 +80,18 @@ public class PreferencesResource {
 	public Response getFile() {
 		//@Produces("application/zip")
 		File f = new File("search-box.rar");
-
+		
 	    if (!f.exists()) {
+	    	this.logger.log(
+	    		MyLogger.INFO,
+	    		"Descarga de componente de búsqueda con error: No se pudo crear el archivo"
+	    	);
 	        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 	    }
 
 	    ContentDisposition contentDisposition = ContentDisposition.type("attachment")
 	    	    .fileName("search-box.rar").creationDate(new Date()).build();
-
+	    this.logger.log(MyLogger.INFO, "Descarga de componente de búsqueda exitosa.");
 	    return Response.status(Status.OK).entity(f)
 	    		.header("Content-Disposition", contentDisposition).build();
 	}
