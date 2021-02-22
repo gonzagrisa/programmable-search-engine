@@ -233,7 +233,7 @@ public class ServicesResource {
 				}
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
 				Client client = jdcf.createClient(endpoint);
-				Object res[] = client.invoke("ping");
+				client.invoke("ping");
 				client.close();
 			}
 		} catch (BadRequestException e) {
