@@ -336,21 +336,27 @@
 		</dependency>
 		<!-- ################# ELASTICSEARCH ################# -->
 
-		<!-- <dependency> <groupId>org.apache.cxf</groupId> <artifactId>cxf-core</artifactId>
-			<version>3.3.5</version> </dependency> <dependency> <groupId>org.apache.cxf</groupId>
+		<!-- <dependency> <groupId>org.apache.cxf</groupId> <artifactId>cxf-core</artifactId> 
+			<version>3.3.5</version> </dependency> <dependency> <groupId>org.apache.cxf</groupId> 
 			<artifactId>cxf-rt-frontend-jaxws</artifactId> <version>3.3.5</version> </dependency> -->
 		<!-- ################# CXF ################# -->
 		<!-- ################# LOG4J ################# -->
 		<dependency>
-		    <groupId>org.apache.logging.log4j</groupId>
-		    <artifactId>log4j-api</artifactId>
-		    <version>2.11.2</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.14.0</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.apache.logging.log4j</groupId>
-		    <artifactId>log4j-core</artifactId>
-		    <version>2.11.2</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.14.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-jcl</artifactId>
+			<version>2.14.0</version>
+		</dependency>
+		
 		<!-- ################# LOG4J ################# -->
 	</dependencies>
 </project>
