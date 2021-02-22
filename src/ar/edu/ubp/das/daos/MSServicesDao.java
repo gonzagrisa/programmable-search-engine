@@ -35,28 +35,7 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 			this.close();
 		}
 	}
-
-	@Override
-	public List<ServiceBean> select(ServiceBean arg0) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void update(Integer serviceId) throws SQLException {
-		try {
-			this.connect();
-			this.setProcedure("dbo.update_reindex_status(?,?)");
-			this.setParameter(1, serviceId);
-			this.setParameter(2, true);
-			if (this.executeUpdate() == 0) {
-				throw new SQLException();
-			}
-		} finally {
-			this.close();
-		}
-	}
-
+	
 	@Override
 	public void insert(ServiceBean service) throws SQLException {
 		try {
@@ -72,6 +51,36 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 				throw new SQLException("El servicio ya se encuentra registrado");
 			}
 			throw e;
+		} finally {
+			this.close();
+		}
+	}
+	
+	@Override
+	public void delete(Integer id) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.delete_service(?)");
+			this.setParameter(1, id);
+			if (this.executeUpdate() == 0) {
+				throw new SQLException();
+			}
+		} finally {
+			this.close();
+		}
+	}
+
+	@Override
+	public void update(Integer serviceId) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.update_reindex_status(?,?)");
+			this.setParameter(1, serviceId);
+			this.setParameter(2, 1);
+			int affectedRows = this.executeUpdate();
+			if (affectedRows == 0) {
+				throw new SQLException();
+			}
 		} finally {
 			this.close();
 		}
@@ -95,21 +104,13 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 		}
 
 	}
-
+	
 	@Override
-	public void delete(Integer id) throws SQLException {
-		try {
-			this.connect();
-			this.setProcedure("dbo.delete_service(?)");
-			this.setParameter(1, id);
-			if (this.executeUpdate() == 0) {
-				throw new SQLException();
-			}
-		} finally {
-			this.close();
-		}
+	public List<ServiceBean> select(ServiceBean arg0) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
 	}
-
+	
 	@Override
 	public void delete(ServiceBean arg0) throws SQLException {
 		// TODO Auto-generated method stub

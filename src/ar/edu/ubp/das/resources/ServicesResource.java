@@ -129,6 +129,8 @@ public class ServicesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response reindexService(ServiceBean service) {
 		try {
+			System.out.println("reindexando Servicio");
+			this.logger.log(MyLogger.INFO, "Reindexar servicio #" + service.getServiceId());
 			this.deleteServiceWebsites(service);
 			this.getDao().update(service.getServiceId());
 			this.logger.log(MyLogger.INFO, "Petición de reindexado para el servicio #" + service.getServiceId() + " exitosa");
@@ -171,8 +173,7 @@ public class ServicesResource {
 	public Response testPing(ServiceBean service) {
 		try {
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
-			String endpoint = service.getUrl() + "ping";
-			checkPingEndpoint(endpoint, service.getProtocol());
+			checkPingEndpoint(service.getUrl(), service.getProtocol());
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR, "Petición manual de chequeo de ping con error: " + e.getMessage());
@@ -203,18 +204,15 @@ public class ServicesResource {
 	
 	private void checkResource(ServiceBean service) throws Exception {
 		String urlBase = service.getUrl().toLowerCase();
-		// le quito la barra del último si la tiene
-		String ping = urlBase + "ping";
-		String resource = urlBase + "list";
 		String protocol = service.getProtocol();
 		switch (protocol) {
 			case PROTOCOL_REST: {
-				if (ping.contains(WSDL) || resource.contains(WSDL))
+				if (urlBase.contains(WSDL))
 					throw new Exception("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
 			case PROTOCOL_SOAP: {
-				if (!ping.contains(WSDL) || !resource.contains(WSDL))
+				if (!urlBase.contains(WSDL))
 					throw new Exception("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
@@ -225,7 +223,7 @@ public class ServicesResource {
 		try {
 			this.logger.log(MyLogger.INFO, "Probando endpoint " + endpoint + " (" + protocol + ")");
 			if (protocol.equals(PROTOCOL_REST)) {
-				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint)).build();
+				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint + "ping")).build();
 				HttpResponse<String> response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() >= 400) {
 					throw new Exception();
