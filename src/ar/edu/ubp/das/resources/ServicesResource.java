@@ -129,6 +129,8 @@ public class ServicesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response reindexService(ServiceBean service) {
 		try {
+			System.out.println("reindexando Servicio");
+			this.logger.log(MyLogger.INFO, "Reindexar servicio #" + service.getServiceId());
 			this.deleteServiceWebsites(service);
 			this.getDao().update(service.getServiceId());
 			this.logger.log(MyLogger.INFO, "Petición de reindexado para el servicio #" + service.getServiceId() + " exitosa");
@@ -170,6 +172,7 @@ public class ServicesResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response testPing(ServiceBean service) {
 		try {
+			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
 			this.checkResource(service);
 			this.checkPingEndpoint(service.getUrl(), service.getProtocol());
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping exitosa");

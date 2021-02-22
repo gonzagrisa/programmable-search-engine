@@ -2,6 +2,8 @@ use users
 
 drop table dbo.websites
 
+select * from dbo.websites
+
 -- ################## TABLA P�GINAS ##################
 CREATE TABLE dbo.websites
 (
@@ -376,7 +378,7 @@ BEGIN
 			CASE WHEN SUM(CASE WHEN indexed = 0 AND isUp = 1  AND isActive = 1 THEN 1 ELSE 0 END) > 0
 					THEN 0 ELSE 1 END AS result
 			FROM dbo.websites
-			WHERE service_id IS NOT NULL
+			WHERE service_id IS NOT NULL AND isActive = 1
 			GROUP BY service_id) as aux
 	on s.service_id = aux.service_id
 	where result = 1
