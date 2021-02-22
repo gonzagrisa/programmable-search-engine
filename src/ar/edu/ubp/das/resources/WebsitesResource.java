@@ -104,7 +104,6 @@ public class WebsitesResource {
 		}
 	}
 
-	// TODO: AGREGAR LA LOGICA PARA ELASTIC, HAY QUE BORRAR AHI O HACER OTRA COSA
 	@PUT
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
