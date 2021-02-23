@@ -12,7 +12,6 @@ import javax.ws.rs.core.Response.Status;
 import org.elasticsearch.ElasticsearchException;
 
 import ar.edu.ubp.das.beans.UserBean;
-import ar.edu.ubp.das.beans.WordBean;
 import ar.edu.ubp.das.beans.search.SearchBean;
 import ar.edu.ubp.das.db.Dao;
 import ar.edu.ubp.das.db.DaoFactory;

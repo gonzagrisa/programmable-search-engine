@@ -77,20 +77,19 @@ public class PreferencesResource {
 	@GET
 	@Path("file")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getFile() {
-		//@Produces("application/zip")
-		File f = new File("search-box.rar");
+	public Response getFile() {	
+		File f = new File("search-box.js");
 		
+		System.out.println(f.getAbsolutePath());
 	    if (!f.exists()) {
 	    	this.logger.log(
 	    		MyLogger.ERROR,
 	    		"Descarga de componente de búsqueda con error: No se pudo crear el archivo"
 	    	);
-	        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+	        return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Hubo un problema interno al atender la solicitud").build();
 	    }
-
 	    ContentDisposition contentDisposition = ContentDisposition.type("attachment")
-	    	    .fileName("search-box.rar").creationDate(new Date()).build();
+	    	    .fileName("search-box.js").creationDate(new Date()).build();
 	    this.logger.log(MyLogger.INFO, "Descarga de componente de búsqueda exitosa.");
 	    return Response.status(Status.OK).entity(f)
 	    		.header("Content-Disposition", contentDisposition).build();
