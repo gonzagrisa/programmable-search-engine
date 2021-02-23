@@ -60,22 +60,4 @@ public class StatsResource {
 		}
 	}
 	
-//	@GET
-//	@Path("queries")
-//	public Response getQueries() {
-//		
-//	}
-//	
-//	@GET
-//	@Path("queries/day")
-//	public Response getQueriesByDay() {
-//		
-//	}
-//	
-//	@GET
-//	@Path("words")
-//	public Response getWords() {
-//		
-//	}
-	
 }

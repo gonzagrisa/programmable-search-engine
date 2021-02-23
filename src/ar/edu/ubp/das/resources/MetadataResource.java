@@ -62,9 +62,7 @@ public class MetadataResource {
 			return Response.status(Status.OK).entity(metadata).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR, "Petición de metadatos con error: " + e.getMessage());
-			if (e.getMessage().equals("Connection refused"))
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error al conectarse a la base de datos").build();
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error al conectarse a la base de datos").build();
 		}
 	}
 
@@ -87,7 +85,7 @@ public class MetadataResource {
 	@Path("/selected")
 	public Response deleteSelected(List<MetadataBean> metadataList) {
 		if (metadataList.size() == 0) {
-			return Response.status(Status.BAD_REQUEST).entity("La petici�n no rellena los requisitos").build();
+			return Response.status(Status.BAD_REQUEST).entity("La petición no rellena los requisitos").build();
 		}
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
@@ -120,13 +118,16 @@ public class MetadataResource {
 	@Path("/selected")
 	public Response updateSelected(List<MetadataBean> metadataList) {
 		if (metadataList.size() == 0) {
-			return Response.status(Status.BAD_REQUEST).entity("La petici�n no rellena los requisitos").build();
+			this.logger.log(MyLogger.ERROR, "Actualización de metadatos con error: La petición no rellena los requisitos");
+			return Response.status(Status.BAD_REQUEST).entity("La petición no rellena los requisitos").build();
 		}
 		try {
 			MetadataDao elastic = new MetadataDaoImpl();
 			elastic.updateBatch(metadataList);
+			this.logger.log(MyLogger.INFO, "Actualización de metadatos exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
+			this.logger.log(MyLogger.ERROR, "Actualización de metadatos con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}

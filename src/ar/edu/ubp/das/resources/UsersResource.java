@@ -58,7 +58,7 @@ public class UsersResource {
 	public Response login(UserBean user) {
 		try {
 			String token = issueToken(authenticate(user));
-			this.logger.log(MyLogger.INFO, "Login del usuario #" + user.getUserId() + " exitoso");
+			this.logger.log(MyLogger.INFO, "Login de usuario exitoso");
 			return Response.ok(token).build();
 		} catch (SQLException e) {
 			this.logger.log(MyLogger.ERROR, "Login del usuario #" + user.getUserId() + " con error: " + e.getMessage());
