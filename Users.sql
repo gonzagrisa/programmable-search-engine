@@ -27,56 +27,50 @@ go
 */
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER TODOS LOS USUARIOS ACTIVOS --------------------------
-create or alter procedure dbo.get_users
-as
-begin
-	select * from dbo.users u
-	where u.role = 'USER'
-	and u.status = 1
-end
-go
+CREATE OR ALTER PROCEDURE dbo.get_users
+AS
+BEGIN
+	SELECT * FROM dbo.users u
+		WHERE u.role = 'USER'
+		and u.status = 1
+END
+GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR SI NOMBRE DE USUARIO ESTA EN USO --------------------------
-create or alter procedure dbo.check_username
+CREATE OR ALTER PROCEDURE dbo.check_username
 (
 	@username	varchar(50),
 	@user_id	INT = -1
 )
-as
-begin	
-	select * from dbo.users u
-		where u.username = @username
-		and u.user_id != @user_id
-		and u.status = 1
-end
-go
-
-execute dbo.check_username 'admin', 1
-go
+AS
+BEGIN
+	SELECT * from dbo.users u
+		WHERE u.username = @username
+		AND u.user_id != @user_id
+		AND u.status = 1
+END
+GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER DATOS DE UN USUARIO --------------------------
-create or alter procedure dbo.get_user_info
+CREATE OR ALTER PROCEDURE dbo.get_user_info
 (
 	@user_id	INT
 )
-as
-begin
-	select * from dbo.users
-		where user_id = @user_id
-end
-go
-
-execute dbo.get_user_info 1
-go
+AS
+BEGIN
+	SELECT * from dbo.users
+		WHERE user_id = @user_id
+END
+GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO LOGIN --------------------------
-create or alter procedure dbo.validate_user
+CREATE OR ALTER PROCEDURE dbo.validate_user
 (
 	@username	varchar(50),
 	@password	varchar(50)
 )
-as
-begin	
+AS
+BEGIN	
 	declare @crypt varbinary(32)
 	select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
@@ -84,29 +78,25 @@ begin
 		where u.username = @username
 		and   u.password = @crypt
 		and status = 1
-end
-go
+END
+GO
 
-select * from dbo.users
-
-execute dbo.validate_user 'admin', 'secret'
-go
 -------------------------- PROCEDIMIENTO ALMACENADO REGISTRAR --------------------------
-create or alter procedure dbo.new_user
+CREATE OR ALTER PROCEDURE dbo.new_user
 (
+	@username	varchar(50),
 	@name		varchar(50),
 	@last_name	varchar(50),
-	@username	varchar(50),
 	@password	varchar(50),
 	@role		varchar(20) = 'USER'
 )
-as
-begin	
-	if exists (
-		select 1
-		from dbo.users
-		where username = @username
-			and status = 1
+AS
+BEGIN
+	IF EXISTS (
+		SELECT 1
+		FROM dbo.users
+		WHERE username = @username
+			AND status = 1
 	)
 	BEGIN
 		raiserror ('El nombre de usuario ya se encuentra en uso',16,1)
@@ -116,15 +106,12 @@ begin
 	select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
 	insert into dbo.users (name, last_name, username, password, role, token_api, status)
-	values	(@name, @last_name, @username, @crypt, @role, null, 1)	
-end
-go
-
-update dbo.websites set reindex = 1, indexed = 0
-
-select * from dbo.websites;
+	values	(@name, @last_name, @username, @crypt, @role, NEWID(), 1)	
+END
+GO
 
 select * from dbo.users
+
 execute dbo.new_user 'userName', 'userSurname', 'TinoCle', 'secret'
 execute dbo.new_user 'userName', 'userSurname', 'user3', 'secret'
 execute dbo.new_user 'userName', 'userSurname', 'user4', 'secret'
@@ -174,13 +161,6 @@ BEGIN
 END
 GO
 
-execute dbo.update_user 5, 'samuele1', 'samuele1', 'samuele1'
-select * from dbo.users
-select * from preferences
-execute dbo.new_user 'admin', 'admin', 'admin', 'admin', 'ADMIN'
-go
-
-
 -------------------------- PROCEDIMIENTO ALMACENADO CHEQUEAR CONTRASE�A ANTIG�A --------------------------
 CREATE or ALTER PROCEDURE dbo.check_password
     @id			INT,
@@ -195,14 +175,6 @@ BEGIN
 		AND u.password = @crypt
 END
 GO
-
-select * from dbo.users
-execute dbo.check_password 1, 'admin1'
-
-
-select * from dbo.users
-go
-
 
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR USUARIO --------------------------
 create or alter procedure dbo.delete_account
@@ -231,13 +203,6 @@ begin
 		and status = 1
 end
 go
-
-
-select * from dbo.users
-	where token_api = 'A13E8731-120F-4586-8466-BC11BD51BC49'
-
-execute dbo.find_user_token 'A13E8731-120F-4586-8466-BC11BD51BC49'
-
 
 -- CURSOR EJEMPLO
 DECLARE	@user_id INT

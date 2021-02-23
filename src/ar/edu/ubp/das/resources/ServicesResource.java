@@ -42,24 +42,22 @@ public class ServicesResource {
 	private static final String PROTOCOL_REST = "REST";
 	private static final String PROTOCOL_SOAP = "SOAP";
 	private static final String WSDL = "?wsdl";
-	private  HttpClient MyHttpClient;
+	private HttpClient MyHttpClient;
 	private MyLogger logger;
 
 	@Context
 	ContainerRequestContext req;
 
 	public ServicesResource() {
-		this.MyHttpClient = HttpClient.newBuilder()
-	            .version(HttpClient.Version.HTTP_1_1)
-	            .connectTimeout(Duration.ofSeconds(5))
-	            .build();
+		this.MyHttpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
+				.connectTimeout(Duration.ofSeconds(5)).build();
 		this.logger = new MyLogger(this.getClass().getSimpleName());
 	}
 
 	@GET
 	@Path("ping")
 	public Response ping() {
-		this.logger.log(MyLogger.INFO, "Petición de ping exitosa");
+		this.logger.log(MyLogger.INFO, "PeticiÃ³n de ping exitosa");
 		return Response.status(Status.OK).entity("pong").build();
 	}
 
@@ -69,10 +67,10 @@ public class ServicesResource {
 		try {
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			List<ServiceBean> services = dao.select((Integer) req.getProperty("id"));
-			this.logger.log(MyLogger.INFO, "Petición de servicios exitosa");
+			this.logger.log(MyLogger.INFO, "PeticiÃ³n de servicios exitosa");
 			return Response.status(Status.OK).entity(services).build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "Petición de servicios con error: " + e.getMessage());
+			this.logger.log(MyLogger.ERROR, "PeticiÃ³n de servicios con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
@@ -87,13 +85,10 @@ public class ServicesResource {
 			this.checkResource(service);
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			dao.insert(service);
-			this.logger.log(MyLogger.INFO, "Inserción de servicio exitosa");
+			this.logger.log(MyLogger.INFO, "InserciÃ³n de servicio exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Inserción de servicio con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "InserciÃ³n de servicio con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -112,13 +107,11 @@ public class ServicesResource {
 			System.out.println("ACTUALIZANDO SERVICIO");
 			service.setServiceId(id);
 			dao.update(service);
-			this.logger.log(MyLogger.INFO, "Actualización de servicio #" + service.getServiceId() + " exitosa");
+			this.logger.log(MyLogger.INFO, "ActualizaciÃ³n de servicio #" + service.getServiceId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Actualización de servicio #" + service.getServiceId() + " con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR,
+					"ActualizaciÃ³n de servicio #" + service.getServiceId() + " con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -133,13 +126,12 @@ public class ServicesResource {
 			this.logger.log(MyLogger.INFO, "Reindexar servicio #" + service.getServiceId());
 			this.deleteServiceWebsites(service);
 			this.getDao().update(service.getServiceId());
-			this.logger.log(MyLogger.INFO, "Petición de reindexado para el servicio #" + service.getServiceId() + " exitosa");
+			this.logger.log(MyLogger.INFO,
+					"PeticiÃ³n de reindexado para el servicio #" + service.getServiceId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Petición de reindexado para el servicio #" + service.getServiceId() + " con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "PeticiÃ³n de reindexado para el servicio #" + service.getServiceId()
+					+ " con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -148,7 +140,8 @@ public class ServicesResource {
 	@Path("{serviceId}")
 	@Secured
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteService(ServiceBean service, @PathParam("serviceId") Integer id, @QueryParam("keepWebsites") Boolean keepWebsites) {
+	public Response deleteService(ServiceBean service, @PathParam("serviceId") Integer id,
+			@QueryParam("keepWebsites") Boolean keepWebsites) {
 		try {
 			if (keepWebsites) {
 				this.unlinkWebsites(service);
@@ -156,13 +149,10 @@ public class ServicesResource {
 				this.deleteServiceWebsites(service);
 			}
 			this.getDao().delete(id);
-			this.logger.log(MyLogger.INFO, "Eliminacion de servicio #" + id + " exitosa");
+			this.logger.log(MyLogger.INFO, "Eliminación de servicio #" + id + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Eliminacion del servicio #" + id + " con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Eliminación del servicio #" + id + " con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
@@ -175,14 +165,30 @@ public class ServicesResource {
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping");
 			this.checkResource(service);
 			this.checkPingEndpoint(service.getUrl(), service.getProtocol());
+			if (service.getServiceId() != null) {
+				this.getDao().update(service, 1);
+			}
 			this.logger.log(MyLogger.INFO, "Petición manual de chequeo de ping exitosa");
 			return Response.status(Status.OK).build();
+		} catch (BadRequestException e) {
+			this.logger.log(MyLogger.INFO, "Problema al chequear estado de salud del servicio del usuario. Problema: " + e.getMessage());
+			return Response.status(Status.BAD_REQUEST).entity("Servicio no disponible o erróneo").build();
+		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Error al actualizar estado del servicio. Error: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error interno en la base de datos").build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "Petición manual de chequeo de ping con error: " + e.getMessage());
+			if (service.getServiceId() != null) {
+				try {
+					this.getDao().update(service, 0);
+				} catch (SQLException sqlE) {
+					this.logger.log(MyLogger.ERROR, "Error al actualizar estado del servicio. Error: " + sqlE.getMessage());
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error interno en la base de datos").build();
+				}
+			}
+			this.logger.log(MyLogger.ERROR, "PeticiÃ³n manual de chequeo de ping con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
 
 	private void unlinkWebsites(ServiceBean service) throws SQLException {
 		Dao<WebsiteBean, ServiceBean> serviceWebsiteDao = DaoFactory.getDao("ServiceWebsites", "ar.edu.ubp.das");
@@ -210,12 +216,12 @@ public class ServicesResource {
 		switch (protocol) {
 			case PROTOCOL_REST: {
 				if (url.contains(WSDL))
-					throw new Exception("El protocolo no coincide con el tipo de recurso");
+					throw new BadRequestException("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
 			case PROTOCOL_SOAP: {
 				if (!url.contains(WSDL))
-					throw new Exception("El protocolo no coincide con el tipo de recurso");
+					throw new BadRequestException("El protocolo no coincide con el tipo de recurso");
 				break;
 			}
 		}
@@ -228,23 +234,16 @@ public class ServicesResource {
 				HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(endpoint + "ping")).build();
 				HttpResponse<String> response = MyHttpClient.send(request, HttpResponse.BodyHandlers.ofString());
 				if (response.statusCode() >= 400) {
-					throw new Exception();
+					throw new BadRequestException("El servicio no responde");
 				}
 			} else if (protocol.equals(PROTOCOL_SOAP)) {
-				if (!endpoint.toLowerCase().contains("?wsdl")){
-					throw new BadRequestException("El servicio no es un Servicio Web (SOAP)");
-				}
 				JaxWsDynamicClientFactory jdcf = JaxWsDynamicClientFactory.newInstance();
 				Client client = jdcf.createClient(endpoint);
 				client.invoke("ping");
 				client.close();
 			}
-		} catch (BadRequestException e) {
-			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
-			// Generalizamos todas las excepciones que puedan saltar en una sola
-			throw new Exception("El servicio no responde");
+			throw new BadRequestException("El servicio no responde");
 		}
 	}
 
@@ -254,9 +253,9 @@ public class ServicesResource {
 
 	private void checkBody(ServiceBean service) throws Exception {
 		if (service == null || !service.isValid()) {
-			throw new Exception("Información requerida faltante");
+			throw new Exception("InformaciÃ³n requerida faltante");
 		} else {
-			// siempre va a quedar con el slash al último
+			// siempre va a quedar con el slash al Ãºltimo
 			if (service.getProtocol().equals(PROTOCOL_REST) && !service.getUrl().endsWith("/"))
 				service.setUrl(service.getUrl() + "/");
 		}

@@ -60,11 +60,11 @@ public class UsersResource {
 			String token = issueToken(authenticate(user));
 			this.logger.log(MyLogger.INFO, "Login del usuario #" + user.getUserId() + " exitoso");
 			return Response.ok(token).build();
+		} catch (SQLException e) {
+			this.logger.log(MyLogger.ERROR, "Login del usuario #" + user.getUserId() + " con error: " + e.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Error interno en la Base de Datos").build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Login del usuario #" + user.getUserId() + " con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Login del usuario #" + user.getUserId() + " con error: " + e.getMessage());
 			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -74,17 +74,12 @@ public class UsersResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response signup(UserBean user) {
 		try {
-			if (
-				user.getUsername() == null ||
-				user.getFirstName() == null ||
-				user.getLastName() == null ||
-				user.getPassword() == null
-			) {
+			if (user.getUsername() == null || user.getFirstName() == null || user.getLastName() == null
+					|| user.getPassword() == null) {
 				// WARNING porque no es un error de la plataforma, que no pante el cúnico
 				this.logger.log(MyLogger.WARNING, "Registro de usuario con datos faltantes.");
-				return Response.status(Status.BAD_REQUEST)
-					.entity("Datos faltantes para el registro del usuario")
-					.build();
+				return Response.status(Status.BAD_REQUEST).entity("Datos faltantes para el registro del usuario")
+						.build();
 			}
 			Dao<UserBean, UserBean> dao = this.getDao();
 			dao.insert(user);
@@ -111,20 +106,13 @@ public class UsersResource {
 			this.logger.log(MyLogger.INFO, "Petición de información de un usuario exitosa");
 			return Response.status(Status.OK).entity(user).build();
 		} catch (SQLException e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Petición de información de un usuario con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Petición de información de un usuario con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Petición de información de un usuario con error: " + e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Petición de información de un usuario con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
 
 	@GET
 	@Secured
@@ -140,7 +128,6 @@ public class UsersResource {
 		}
 	}
 
-
 	@POST
 	@Secured
 	@Path("return/{id}")
@@ -149,24 +136,15 @@ public class UsersResource {
 			Dao<UserBean, UserBean> dao = this.getDao();
 			UserBean user = dao.find(id);
 			if (user == null) {
-				this.logger.log(
-					MyLogger.WARNING,
-					"Petición de devolución de cuenta de un usuario inexistente"
-				);
+				this.logger.log(MyLogger.WARNING, "Petición de devolución de cuenta de un usuario inexistente");
 				throw new Exception("User not Found");
 			}
 			String token = issueToken(user);
-			this.logger.log(
-				MyLogger.INFO,
-				"Petición de devolución de cuenta de un usuario exitosa"
-			);
+			this.logger.log(MyLogger.INFO, "Petición de devolución de cuenta de un usuario exitosa");
 			return Response.ok().entity(token).build();
 		} catch (Exception e) {
-			this.logger.log(
-					MyLogger.ERROR,
-					"Petición de devolución de cuenta de un usuario con error: "
-					+ e.getMessage()
-				);
+			this.logger.log(MyLogger.ERROR,
+					"Petición de devolución de cuenta de un usuario con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -180,21 +158,15 @@ public class UsersResource {
 			Dao<UserBean, UserBean> dao = this.getDao();
 			UserBean user = dao.find(id);
 			if (user == null) {
-				this.logger.log(
-					MyLogger.WARNING,
-					"Petición de suplantación de identidad de un usuario inexistente"
-				);
+				this.logger.log(MyLogger.WARNING, "Petición de suplantación de identidad de un usuario inexistente");
 				throw new Exception("User not Found");
 			}
 			String token = issueToken(user, (Integer) request.getProperty("id"));
 			this.logger.log(MyLogger.INFO, "Petición de suplantación de identidad de un usuario exitosa");
 			return Response.ok().entity(token).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.INFO,
-				"Petición de suplantación de identidad de un usuario con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.INFO,
+					"Petición de suplantación de identidad de un usuario con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -268,11 +240,8 @@ public class UsersResource {
 			this.logger.log(MyLogger.INFO, "Actualización de usuario por parte del admin exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Actualización de usuario por parte del admin con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR,
+					"Actualización de usuario por parte del admin con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -291,18 +260,10 @@ public class UsersResource {
 			elastic.deleteByUserId(userId);
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Eliminación propia de usuario con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Eliminación propia de usuario con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Eliminación propia de usuario con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Eliminación propia de usuario con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -322,18 +283,10 @@ public class UsersResource {
 			this.logger.log(MyLogger.INFO, "Eliminación de usuario por parte del admin exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (SQLException e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Eliminación de usuario por parte del admin con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Eliminación de usuario por parte del admin con error: " + e.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		} catch (Exception e) {
-			this.logger.log(
-				MyLogger.ERROR,
-				"Eliminación de usuario por parte del admin con error: "
-				+ e.getMessage()
-			);
+			this.logger.log(MyLogger.ERROR, "Eliminación de usuario por parte del admin con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -349,22 +302,14 @@ public class UsersResource {
 	}
 
 	private String issueToken(UserBean user) {
-		return Jwts.builder()
-				.setSubject("usr")
-				.claim("id", user.getUserId())
-				.claim("username", user.getUsername())
-				.claim("role", user.getRole())
-				.signWith(SecurityFilter.KEY).compact();
+		return Jwts.builder().setSubject("usr").claim("id", user.getUserId()).claim("username", user.getUsername())
+				.claim("role", user.getRole()).signWith(SecurityFilter.KEY).compact();
 	}
 
 	private String issueToken(UserBean user, Integer impersonator) {
-		return Jwts.builder()
-				.setSubject("usr")
-				.claim("id", user.getUserId())
-				.claim("username", user.getUsername())
-				.claim("role", user.getRole())
-				.claim("impersonator", impersonator)
-				.signWith(SecurityFilter.KEY).compact();
+		return Jwts.builder().setSubject("usr").claim("id", user.getUserId()).claim("username", user.getUsername())
+				.claim("role", user.getRole()).claim("impersonator", impersonator).signWith(SecurityFilter.KEY)
+				.compact();
 	}
 
 	private Dao<UserBean, UserBean> getDao() throws SQLException {

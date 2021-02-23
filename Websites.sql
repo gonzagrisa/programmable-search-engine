@@ -108,15 +108,15 @@ CREATE OR ALTER PROCEDURE dbo.new_website_from_service
 	@url		VARCHAR(500),
 	@service_id INT
 )
-as
-begin
-	-- si ya existe un dominio con el mismo servicio y mismo dominio o sin importar el servicio al cual pertenecia, si isActive = 0 , usar ese
+AS
+BEGIN
+	-- si existe un dominio con el id de servicio con el que se esta insertando y mismo dominio o sin importar el servicio al cual pertenecia, si isActive = 0 , usar ese
 	IF EXISTS(
 		SELECT 1
-		from dbo.websites
-		where user_id = @user_id
-		AND dbo.get_domain(url) = dbo.get_domain(@url)
-		AND (service_id = @service_id OR (service_id is null and indexed = 0) OR isActive = 0)
+		FROM dbo.websites
+			WHERE user_id = @user_id
+			AND dbo.get_domain(url) = dbo.get_domain(@url)
+			AND (service_id = @service_id OR (service_id is null AND indexed = 0) OR isActive = 0)
 	)
 	BEGIN
 		update dbo.websites
@@ -128,14 +128,13 @@ begin
 			where dbo.get_domain(url) = dbo.get_domain(@url)
 			AND	  user_id = @user_id
 	END
-	-- si ya existe un dominio con el mismo dominio pero que fue insertado a mano y esta indexado o fue insertado desde otro servicio, no insertarlo
-	ELSE IF EXISTS( SELECT 1
-				from dbo.websites
-				where user_id = @user_id
-				AND dbo.get_domain(url) = dbo.get_domain(@url)
-				AND indexed = 1
-				AND isActive = 1
-				AND (service_id != @service_id OR service_id IS NULL))   --- AGREGAR EL TENER EL CUENTA QUE EL SERVICIO CON EL QUE SE LA AGREGO PUEDE ESTAR ELIMINADO (IS ACTIVE 0)
+	-- si el dominio ya esta registrado pero que fue insertado a mano y esta indexado o fue insertado desde otro servicio, no insertarlo
+	ELSE IF EXISTS( SELECT *
+						FROM dbo.websites
+						WHERE user_id = 2 -- @user_id
+						AND dbo.get_domain(url) = dbo.get_domain('http://youtube.com') -- dbo.get_domain(@url)
+						AND ((service_id != @service_id AND EXISTS (select 1 from dbo.services s where s.service_id = service_id AND isActive = 1)) -- pagina insertada desde otro servicio y el servicio esta activo
+							 OR (indexed = 1 AND service_id IS NULL))) -- o fue insertada a mano y esta indexada
 	BEGIN
 		PRINT 'PAGINA NO INSERTADA'
 		return
@@ -148,13 +147,6 @@ begin
 	END
 END
 GO
-
-
-
-select * from dbo.services
-select * from dbo.websites
-
-execute dbo.new_website_from_service 2, 'https://youtube.com',1
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PÁGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.update_website

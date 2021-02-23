@@ -148,9 +148,16 @@ public class MSServicesDao extends Dao<ServiceBean, ServiceBean>{
 	}
 
 	@Override
-	public void update(ServiceBean arg0, Integer arg1) throws SQLException {
-		// TODO Auto-generated method stub
-
+	public void update(ServiceBean service, Integer active) throws SQLException {
+		try {
+			this.connect();
+			this.setProcedure("dbo.update_service_status(?,?)");
+			this.setParameter(1, service.getServiceId());
+			this.setParameter(2, active);
+			this.executeUpdate();
+		} finally {
+			this.close();
+		}
 	}
 
 	@Override

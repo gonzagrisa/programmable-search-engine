@@ -14,9 +14,9 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 		try {
 			this.connect();
 			this.setProcedure("dbo.new_user(?,?,?,?)");
-			this.setParameter(1, user.getFirstName());
-			this.setParameter(2, user.getLastName());
-			this.setParameter(3, user.getUsername());
+			this.setParameter(1, user.getUsername());
+			this.setParameter(2, user.getFirstName());
+			this.setParameter(3, user.getLastName());
 			this.setParameter(4, user.getPassword());
 			this.executeUpdate();
 		} catch(SQLException e) {
