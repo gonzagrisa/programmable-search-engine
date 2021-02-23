@@ -43,15 +43,6 @@ public class SearchResource {
 			Dao<UserBean, String> dao = DaoFactory.getDao("UserToken", "ar.edu.ubp.das");
 			Integer userId = dao.find(token).getUserId();
 			search.setUserId(userId);
-			Dao<WordBean, WordBean> daoWord = DaoFactory.getDao("Words", "ar.edu.ubp.das");
-			String[] words = search.getQuery().split(" ");
-			WordBean word;
-			for (int i = 0; i < words.length; i++) {
-				word = new WordBean();
-				word.setUserId(userId);
-				word.setWord(words[i]);
-				daoWord.insert(word);
-			}
 			MetadataDao elastic = new MetadataDaoImpl();
 			this.logger.log(MyLogger.INFO, "Inserción de búsqueda del user #" + userId + " exitosa");
 			return Response.status(Status.OK).entity(elastic.search(search)).build();
