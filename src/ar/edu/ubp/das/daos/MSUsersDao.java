@@ -56,10 +56,14 @@ public class MSUsersDao extends Dao<UserBean, UserBean> {
 			this.connect();
 			this.setProcedure("dbo.update_user(?,?,?,?,?)");
 			this.setParameter(1, user.getUserId());
-			this.setParameter(2, user.getFirstName());
-			this.setParameter(3, user.getLastName());
-			this.setParameter(4, user.getUsername());
-			this.setParameter(5, user.getPassword());
+			this.setParameter(2, user.getUsername());
+			this.setParameter(3, user.getFirstName());
+			this.setParameter(4, user.getLastName());
+			if (user.getPassword() == null || user.getPassword().equals("")) {
+				this.setNull(5, java.sql.Types.VARCHAR);
+			} else {
+				this.setParameter(5, user.getPassword());				
+			}
 			if (this.executeUpdate() == 0) {
 				throw new SQLException("El usuario a actualizar no existe");
 			}

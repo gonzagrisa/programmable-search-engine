@@ -374,8 +374,8 @@ BEGIN
 END
 GO
 
--------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA COMO INDEXADA --------------------------
-CREATE OR ALTER PROCEDURE dbo.get_service_website_indexed
+-------------------------- PROCEDIMIENTO ALMACENADO PARA FIJARSE SI LA PÁGINA A INSERTAR POR EL SERVICIO YA FUE INDEXADA --------------------------
+CREATE OR ALTER PROCEDURE dbo.find_website_indexed
 (
 	@url		VARCHAR(500),
 	@service_id	INT

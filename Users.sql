@@ -118,9 +118,8 @@ CREATE or ALTER PROCEDURE dbo.update_user
 	@password	VARCHAR(50) = null
 AS
 BEGIN
-	
-	if (@password IS NOT null)
-	begin
+	IF (@password IS NOT null)
+	BEGIN
 		declare @crypt varbinary(32)
 		select @crypt = HASHBYTES('sha1', @password + replicate('*', 32 - len(@password)))
 
@@ -128,16 +127,16 @@ BEGIN
 		set password = @crypt
 		from dbo.users u
 		where u.user_id = @id
-	end
-	if (@name IS NOT null AND @last_name IS NOT null AND @username IS NOT null)
-	begin
+	END
+	IF (@name IS NOT null AND @last_name IS NOT null AND @username IS NOT null)
+	BEGIN
 		update u
 			set name = @name,
 				last_name = @last_name,
 				username = @username
 			from dbo.users u
 			where u.user_id = @id
-	end
+	END
 END
 GO
 
@@ -183,6 +182,7 @@ BEGIN
 		and status = 1
 END
 GO
+
 
 -- CURSOR EJEMPLO
 DECLARE	@user_id INT
