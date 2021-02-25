@@ -68,7 +68,7 @@ CREATE OR ALTER PROCEDURE dbo.insert_website
 as
 begin
 	-- activada, no se puede pisar
-	if exists(
+	IF EXISTS(
 		SELECT 1
 		from dbo.websites w
 		where w.user_id = @user_id
@@ -80,7 +80,7 @@ begin
 		return
 	END
 	-- eliminada, la volvemos a activar
-	if exists(
+	ELSE IF EXISTS(
 		SELECT 1
 		from dbo.websites w
 		where w.user_id = @user_id
@@ -90,9 +90,10 @@ begin
 	BEGIN
 		update dbo.websites set isActive = 1, reindex = 1, indexed = 0, isUp = 1 
 			where user_id = @user_id and url = @url
-		return
+		-- return
 	END
 	-- si no existía, se inserta normalmente
+	ELSE
 	BEGIN
 		insert into dbo.websites(user_id, url)
 		values(@user_id, @url)
