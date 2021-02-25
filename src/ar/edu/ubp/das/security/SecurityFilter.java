@@ -62,7 +62,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 			+ " (" + requestContext.getMethod() + ")"
 		);
 		requestContext.abortWith(
-			Response.status(Response.Status.UNAUTHORIZED).entity("Su sesiÃ³n ha expirado").build()
+			Response.status(Response.Status.UNAUTHORIZED).entity("Su sesión ha expirado").build()
 		);
 	}
 

@@ -203,7 +203,7 @@ public class WebsitesResource {
 		try {
 			Dao<WebsiteBean, WebsiteBean> dao = this.getDao();
 			if (dao.find(website.getWebsiteId()) == null) {
-				throw new Exception("No se encuentr� ninguna p�gina web con ese criterio");
+				throw new Exception("No se encuentró ninguna página web con ese criterio");
 			}
 		} catch (SQLException e) {
 			throw e;
