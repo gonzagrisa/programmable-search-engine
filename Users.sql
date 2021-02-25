@@ -1,9 +1,7 @@
-use users
+-- use users
+use buscador
 
 drop table dbo.users
-drop table dbo.websites
-drop table dbo.services
-drop table dbo.preferences
 
 -- ################## TABLA USUARIOS ##################
 CREATE TABLE dbo.users (
@@ -19,6 +17,7 @@ CREATE TABLE dbo.users (
 	constraint CK__users_role__END check (role in ('ADMIN', 'USER'))
 );
 go
+
 
 /*
 * *****************************************
@@ -110,25 +109,6 @@ BEGIN
 END
 GO
 
-select * from dbo.users
-
-execute dbo.new_user 'userName', 'userSurname', 'TinoCle', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user3', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user4', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user5', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user6', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user7', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user8', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user9', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user10', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user11', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user12', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user13', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user14', 'secret'
-execute dbo.new_user 'userName', 'userSurname', 'user15', 'secret'
-go
-
-
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR INFORMACION USUARIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_user
     @id			INT,
@@ -177,32 +157,32 @@ END
 GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR USUARIO --------------------------
-create or alter procedure dbo.delete_account
+CREATE or ALTER PROCEDURE dbo.delete_account
 (
 	@user_id		INT
 )
-as
-begin
+AS
+BEGIN
 	update u
 		set status = 0
 		from dbo.users u
 		where u.user_id = @user_id
-end
-go
+END
+GO
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER USUARIO A PARTIR DE SU TOKEN --------------------------
-create or alter procedure dbo.find_user_token
+CREATE or ALTER PROCEDURE dbo.find_user_token
 (
 	@token	VARCHAR(200)
 )
-as
-begin
+AS
+BEGIN
 	select *
 		from dbo.users
 		where token_api = @token
 		and status = 1
-end
-go
+END
+GO
 
 -- CURSOR EJEMPLO
 DECLARE	@user_id INT

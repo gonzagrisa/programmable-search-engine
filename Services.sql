@@ -1,4 +1,5 @@
-use users
+-- use users
+use buscador
 
 drop table dbo.services
 
@@ -22,11 +23,10 @@ CREATE TABLE dbo.services
 );
 go
 
-select * from dbo.services
 
 -- Para obtener todos los procedimientos almacenados de la base de datos
 SELECT *
-  FROM users.INFORMATION_SCHEMA.ROUTINES
+  FROM buscador.INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_TYPE = 'PROCEDURE'
 go
 ----------------------------------------------------------------------------------------------------------------
@@ -48,8 +48,6 @@ BEGIN
 END
 GO
 
-execute dbo.get_services_user 2
-
 -------------------------- PROCEDIMIENTO ALMACENADO QUE BORRA PÁGINAS DE UN SERVICIO DADO --------------------------
 CREATE OR ALTER PROCEDURE dbo.clean_service_pages
 (
@@ -65,7 +63,6 @@ begin
 	where service_id = @service_id
 end
 GO
-
 
 -------------------------- PROCEDIMIENTO ALMACENADO INSERTAR UN NUEVO SERVICIO --------------------------
 CREATE OR ALTER PROCEDURE dbo.insert_service
@@ -92,7 +89,6 @@ BEGIN
 	END
 END
 GO
-
 
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR UN SERVICIO --------------------------
 CREATE or ALTER PROCEDURE dbo.update_service (
@@ -204,6 +200,14 @@ BEGIN
 END
 GO
 
+
+
+
+
+
+
+
+
 ----------------------------------------------------------------------------------------------------------------
 select user_id, string_agg(url, ',')
 	from dbo.services
@@ -219,7 +223,6 @@ values	(1, 'youtube0.com', 'REST', 0),
 
 -- LOS SERVICIOS TRATARLOS DE A 1 para asi poder identificar en el metadata a que servicio corresponde cada pagina
 -- A LAS PAGINAS QUE TIENE REGISTRADAS UN USUARIO SE PUEDEN TRATAR DE A GRUPO
-
 
 
 -- TESTING REINDEX, ETC

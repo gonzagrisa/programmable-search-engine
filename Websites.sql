@@ -1,8 +1,7 @@
-use users
+-- use users
+use buscador
 
 drop table dbo.websites
-
-select * from dbo.websites
 
 -- ################## TABLA P�GINAS ##################
 CREATE TABLE dbo.websites
@@ -65,8 +64,8 @@ CREATE OR ALTER PROCEDURE dbo.insert_website
 	@url			VARCHAR(500),
 	@affectedRows	INT OUTPUT
 )
-as
-begin
+AS
+BEGIN
 	-- activada, no se puede pisar
 	IF EXISTS(
 		SELECT 1
@@ -174,12 +173,7 @@ BEGIN
 	SELECT @affectedRows = @@ROWCOUNT;
 END
 GO
-select * from dbo.websites
-select * from dbo.services
 
-declare @out int
-execute insert_website 2, 'https://stackoverflow.com', @out output
-go
 -------------------------- PROCEDIMIENTO ALMACENADO ELIMINAR PAGINA --------------------------
 CREATE OR ALTER PROCEDURE dbo.delete_website
 (
@@ -380,14 +374,7 @@ BEGIN
 END
 GO
 
-
-
-select * from dbo.websites
-
-update dbo.services
-	set reindex = 1 where service_id = 33
-GO
-
+-------------------------- PROCEDIMIENTO ALMACENADO SETEAR PAGINA COMO INDEXADA --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_service_website_indexed
 (
 	@url		VARCHAR(500),
@@ -402,14 +389,7 @@ BEGIN
 END
 GO
 
-select * from dbo.websites
 
-update dbo.websites
-	set indexed = 1
-	where website_id = 35
-
-execute dbo.get_service_website_indexed 'https://github.com', 1
-go
 
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------

@@ -1,4 +1,6 @@
-use users
+-- use users
+use buscador
+
 drop table dbo.busquedas
 
 CREATE TABLE dbo.busquedas
@@ -62,11 +64,6 @@ BEGIN
 	END
 END
 GO
-
-execute dbo.get_busquedas null
-go
-
--- exec get_top_palabras @user_id = 1
 
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS CON RESULTADOS Y SIN RESULTADOS --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_resultados_busqueda
@@ -141,11 +138,6 @@ BEGIN
 	END
 END
 GO
-
-execute dbo.get_cantidades null
-go
-
-select * from dbo.users
 
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS POR TIPO DE ARCHIVO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_tipo_count

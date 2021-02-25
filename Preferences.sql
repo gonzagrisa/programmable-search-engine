@@ -1,4 +1,6 @@
-use users
+-- use users
+use buscador
+
 drop table dbo.preferences
 
 -- ################## TABLA PREFERENCIAS ##################
@@ -30,17 +32,18 @@ end
 go
 
 -------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS USUARIO --------------------------
-create or alter procedure dbo.get_preferences
+CREATE OR ALTER PROCEDURE dbo.get_preferences
 (
 	@user_id	INT
 )
-as
-begin
+AS
+BEGIN
 	select * from dbo.preferences p
 		where p.user_id = @user_id
-end
-go
+END
+GO
 
+-------------------------- PROCEDIMIENTO ALMACENADO OBTENER PREFERENCIAS DEL USUARIO A PARTIR DE SU TOKEN --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_preferences_token
 (
 	@token	VARCHAR(40)
@@ -55,12 +58,8 @@ BEGIN
 END
 GO
 
-execute dbo.get_preferences_token 'A13E8731-120F-4586-8466-BC11BD51BC49'
-
-execute dbo.get_preferences 2
-
 -------------------------- PROCEDIMIENTO ALMACENADO ACTUALIZAR PREFERENCIAS BUSCADOR --------------------------
-create or alter procedure dbo.update_preferences
+CREATE OR ALTER PROCEDURE dbo.update_preferences
 (
 	@user_id		INT,
 	@border_width	DECIMAL (3, 2),
@@ -70,8 +69,8 @@ create or alter procedure dbo.update_preferences
 	@placehoder		VARCHAR(100),
 	@color			VARCHAR(7)
 )
-as
-begin
+AS
+BEGIN
 	update p
 		set p.color = @color,
 			p.border_width = @border_width,
@@ -81,10 +80,8 @@ begin
 			p.placeholder = @placehoder
 		from dbo.preferences p
 		where p.user_id = @user_id
-end
-go
-
-
+END
+GO
 
 
 -- CURSOR EJEMPLO
