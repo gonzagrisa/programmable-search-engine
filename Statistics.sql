@@ -37,11 +37,11 @@ BEGIN
 END
 GO
 
-execute dbo.insert_busqueda 1, "pato detective", 5, null, null, null, null
-execute dbo.insert_busqueda 1, "harry potter", 7, null, null, null, null
-execute dbo.insert_busqueda 1, "formula 1", 1, null, null, null, null
-execute dbo.insert_busqueda 1, "crepusculo", 0, null, null, null, null
-execute dbo.insert_busqueda 1, "matrix", 3, null, null, null, null
+execute dbo.insert_busqueda 1004, "pato detective", 5, null, null, null, null
+execute dbo.insert_busqueda 1004, "harry potter", 7, null, null, null, null
+execute dbo.insert_busqueda 1004, "formula 1", 1, null, null, null, null
+execute dbo.insert_busqueda 1004, "crepusculo", 0, null, null, null, null
+execute dbo.insert_busqueda 1004, "matrix", 3, null, null, null, null
 go
 
 ------------------------ PROCEDIMIENTO PARA OBTENER LAS BUSQUEDAS --------------------------
@@ -74,14 +74,14 @@ AS
 BEGIN
 	IF (@user_id IS NOT NULL)
 	BEGIN
-		SELECT COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados, 
+		SELECT COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados,
 			   COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados
 		FROM dbo.busquedas
 		where user_id = @user_id
 	END
 	ELSE
 	BEGIN
-		SELECT COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados, 
+		SELECT COUNT(CASE WHEN results = 0 THEN 1 END) sin_resultados,
 			   COUNT(CASE WHEN results > 0 THEN 1 END) con_resultados
 		FROM dbo.busquedas
 	END
@@ -139,6 +139,12 @@ BEGIN
 END
 GO
 
+execute dbo.get_cantidades 1004
+go
+
+select * from users
+select * from dbo.busquedas
+
 ------------------------ PROCEDIMIENTO PARA OBTENER CANTIDAD DE BUSQUEDAS POR TIPO DE ARCHIVO --------------------------
 CREATE OR ALTER PROCEDURE dbo.get_tipo_count
 (
@@ -146,7 +152,7 @@ CREATE OR ALTER PROCEDURE dbo.get_tipo_count
 )
 AS
 BEGIN
-	
+
 	SELECT tipoArchivo, COUNT(*)
 		FROM dbo.busquedas
 	where user_id = @user_id
