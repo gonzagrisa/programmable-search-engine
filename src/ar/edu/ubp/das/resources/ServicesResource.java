@@ -57,7 +57,7 @@ public class ServicesResource {
 	@GET
 	@Path("ping")
 	public Response ping() {
-		this.logger.log(MyLogger.INFO, "PeticiÃ³n de ping exitosa");
+		this.logger.log(MyLogger.INFO, "Petición de ping exitosa");
 		return Response.status(Status.OK).entity("pong").build();
 	}
 
@@ -67,10 +67,10 @@ public class ServicesResource {
 		try {
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			List<ServiceBean> services = dao.select((Integer) req.getProperty("id"));
-			this.logger.log(MyLogger.INFO, "PeticiÃ³n de servicios exitosa");
+			this.logger.log(MyLogger.INFO, "Petición de servicios exitosa");
 			return Response.status(Status.OK).entity(services).build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "PeticiÃ³n de servicios con error: " + e.getMessage());
+			this.logger.log(MyLogger.ERROR, "Petición de servicios con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
@@ -85,10 +85,10 @@ public class ServicesResource {
 			this.checkResource(service);
 			Dao<ServiceBean, ServiceBean> dao = this.getDao();
 			dao.insert(service);
-			this.logger.log(MyLogger.INFO, "InserciÃ³n de servicio exitosa");
+			this.logger.log(MyLogger.INFO, "Inserción de servicio exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "InserciÃ³n de servicio con error: " + e.getMessage());
+			this.logger.log(MyLogger.ERROR, "Inserción de servicio con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -107,11 +107,11 @@ public class ServicesResource {
 			System.out.println("ACTUALIZANDO SERVICIO");
 			service.setServiceId(id);
 			dao.update(service);
-			this.logger.log(MyLogger.INFO, "ActualizaciÃ³n de servicio #" + service.getServiceId() + " exitosa");
+			this.logger.log(MyLogger.INFO, "Actualización de servicio #" + service.getServiceId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
 			this.logger.log(MyLogger.ERROR,
-					"ActualizaciÃ³n de servicio #" + service.getServiceId() + " con error: " + e.getMessage());
+					"Actualización de servicio #" + service.getServiceId() + " con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -127,10 +127,10 @@ public class ServicesResource {
 			this.deleteServiceWebsites(service);
 			this.getDao().update(service.getServiceId());
 			this.logger.log(MyLogger.INFO,
-					"PeticiÃ³n de reindexado para el servicio #" + service.getServiceId() + " exitosa");
+					"Petición de reindexado para el servicio #" + service.getServiceId() + " exitosa");
 			return Response.status(Status.NO_CONTENT).build();
 		} catch (Exception e) {
-			this.logger.log(MyLogger.ERROR, "PeticiÃ³n de reindexado para el servicio #" + service.getServiceId()
+			this.logger.log(MyLogger.ERROR, "Petición de reindexado para el servicio #" + service.getServiceId()
 					+ " con error: " + e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

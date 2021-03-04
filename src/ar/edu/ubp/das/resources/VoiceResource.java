@@ -22,7 +22,7 @@ import ar.edu.ubp.das.logging.MyLogger;
 public class VoiceResource {
 	private Client client;
 	private WebTarget target;
-	private static final String KEY = "AIzaSyC87MTR2nnMs8s9BZGDuVlFO46EbzF9XKQ";
+	private static final String KEY = "KEY";
 	private static final String URI = "https://speech.googleapis.com/v1p1beta1/speech:recognize?key=" + KEY;
 	private MyLogger logger;
 	
